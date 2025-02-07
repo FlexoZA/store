@@ -23,7 +23,26 @@
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
                 incididunt ut labore et dolore magna aliqua.
               </p>
-              <p class="mt-4 text-2xl font-bold text-gray-900">R34,000</p>
+              <p class="mt-6 text-2xl font-bold text-gray-900">R34,000</p>
+              <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
+              <!-- Action Buttons -->
+              <div class="">
+                <button
+                  class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                >
+                  Read More
+                </button>
+                <button
+                  class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                >
+                  3D View
+                </button>
+                <button
+                  class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                >
+                  Documentation
+                </button>
+              </div>
             </div>
 
             <!-- Icons -->
