@@ -19,30 +19,44 @@
           <div class="flex flex-col justify-between">
             <div>
               <h3 class="text-2xl font-bold text-gray-900">Lister</h3>
+            <!-- Description -->
               <p class="mt-4 text-lg text-gray-500">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-                incididunt ut labore et dolore magna aliqua.
+                The CWE3D Lister is a 3D printer engineered for reliability, precision,
+                 and ease of maintenance. Designed primarily for the South African market,
+                 it offers a balanced solution for enthusiasts, businesses, and educational
+                 institutions seeking a dependable and high-quality 3D printing experience.
               </p>
-              <p class="mt-6 text-2xl font-bold text-gray-900">R34,000</p>
-              <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
+              <ul class="mt-4 space-y-2 text-gray-600 list-disc pl-5">
+                <li>CoreXY design with a 250mm x 250mm x 240mm build volume</li>
+                <li>Dual ballscrew Z-axis for superior stability and precision</li>
+                <li>Sensorless homing on all axes for simplified mechanics</li>
+                <li>Custom-designed super flat bed Garolite F4 base (low thermal warp)</li>
+                <li>Open-source design with a focus on maintainability and upgradability</li>
+              </ul>
+
               <!-- Action Buttons -->
-              <div class="">
-                <button
-                  class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+              <div class="mt-4">
+                <a
+                  href="#"
+                  class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
                 >
                   Read More
-                </button>
-                <button
-                  class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
-                >
-                  3D View
-                </button>
-                <button
-                  class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                </a>
+                <a
+                  href="#"
+                  class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
                 >
                   Documentation
-                </button>
+                </a>
+                <a
+                  href="#"
+                  class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block"
+                >
+                  3D View
+                </a>
               </div>
+              <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
+              <p class="mt-6 text-l font-bold text-gray-900 text-right">R34,000</p>
             </div>
 
             <!-- Icons -->
