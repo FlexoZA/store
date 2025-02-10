@@ -30,4 +30,4 @@ coverage
 *.tsbuildinfo
 
 # Environment Variables
-.env.local
+.env
