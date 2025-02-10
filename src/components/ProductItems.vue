@@ -19,12 +19,12 @@
           <div class="flex flex-col justify-between">
             <div>
               <h3 class="text-2xl font-bold text-gray-900">Lister</h3>
-            <!-- Description -->
+              <!-- Description -->
               <p class="mt-4 text-lg text-gray-500">
-                The CWE3D Lister is a 3D printer engineered for reliability, precision,
-                 and ease of maintenance. Designed primarily for the South African market,
-                 it offers a balanced solution for enthusiasts, businesses, and educational
-                 institutions seeking a dependable and high-quality 3D printing experience.
+                The CWE3D Lister is a 3D printer engineered for reliability, precision, and ease of
+                maintenance. Designed primarily for the South African market, it offers a balanced
+                solution for enthusiasts, businesses, and educational institutions seeking a
+                dependable and high-quality 3D printing experience.
               </p>
               <ul class="mt-4 space-y-2 text-gray-600 list-disc pl-5">
                 <li>CoreXY design with a 250mm x 250mm x 240mm build volume</li>
@@ -99,85 +99,49 @@
         <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
       </div>
 
-      <div
-        class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
-      >
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/alt/C_trunking.jpg"
-            alt="Tall slender porcelain bottle with natural clay textured body and cork stopper."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Earthen Bottle</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R48</p>
-        </a>
-
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/Main_controller_base_lid.jpg"
-            alt="Olive drab green insulated bottle with flared screw lid and flat top."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Nomad Tumbler</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R35</p>
-        </a>
-
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/Inner_support_bracket.jpg"
-            alt="Person using a pen to cross a task off a productivity paper card."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Focus Paper Refill</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R89</p>
-        </a>
-
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/E_trunking.jpg"
-            alt="Hand holding black machined steel mechanical pencil with brass tip and top."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Machined Mechanical Pencil</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R35</p>
-        </a>
-
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/C_trunking.jpg"
-            alt="Hand holding black machined steel mechanical pencil with brass tip and top."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Machined Mechanical Pencil</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R35</p>
-        </a>
-
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/A_trunking_lid.jpg"
-            alt="Hand holding black machined steel mechanical pencil with brass tip and top."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Machined Mechanical Pencil</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R35</p>
-        </a>
-
-        <a href="#" class="group">
-          <img
-            src="@/assets/products/Anti_Vibration_Feet.jpg"
-            alt="Hand holding black machined steel mechanical pencil with brass tip and top."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          <h3 class="mt-4 text-sm text-gray-700">Machined Mechanical Pencil</h3>
-          <p class="mt-1 text-lg font-medium text-gray-900">R35</p>
-        </a>
-
-        <!-- More products... -->
+      <!-- Products -->
+      <div v-if="loading">Loading...</div>
+      <div v-else-if="error">Error: {{ error }}</div>
+      <div v-else>
+        <div
+          class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
+        >
+          <div v-for="item in items" :key="item.id" class="group">
+            <a href="#">
+              <!--
+                <img
+                  :src="item.image || '@/assets/products/alt/C_trunking.jpg'"
+                  :alt="item.name"
+                  class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
+                />
+                -->
+              <img
+                src="@/assets/products/alt/C_trunking.jpg"
+                alt="Tall slender porcelain bottle with natural clay textured body and cork stopper."
+                class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
+              />
+              <h3 class="mt-4 text-sm text-gray-700">{{ item.name }}</h3>
+              <p class="mt-1 text-lg font-medium text-gray-900">R{{ item.price.toFixed(2) }}</p>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script></script>
+<script setup>
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useSalesBinderStore } from '@/stores/salesbinder/salesBinder'
+
+const store = useSalesBinderStore()
+const { items, loading, error } = storeToRefs(store)
+
+onMounted(async () => {
+  await store.fetchItems()
+  console.log('DEBUG::', items.value) // Debug output
+})
+</script>
 
 <style scoped></style>
