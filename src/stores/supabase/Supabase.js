@@ -35,8 +35,6 @@ export const useSupabaseStore = defineStore('supabase', () => {
         .range(offset, offset + itemsPerPage - 1)
         .order('id')
 
-      console.log('Query result:', { productData, count, supaError })
-
       if (supaError) throw supaError
 
       products.value = productData
