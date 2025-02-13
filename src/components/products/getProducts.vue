@@ -5,7 +5,7 @@
   </div>
   <div v-else-if="error">Error: {{ error }}</div>
   <div v-else>
-    <!-- Add refresh button Todo::remove from production -->
+    <!-- Refresh button Todo::remove from production -->
     <button
       @click="refreshProducts"
       class="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
@@ -61,7 +61,7 @@
       <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
           <p class="text-sm text-gray-700">
-            Showing page <span class="font-medium">1</span> of
+            Showing page <span class="font-medium">{{ currentPage }}</span> of
             <span class="font-medium">{{ totalPages }}</span>
           </p>
         </div>
@@ -71,7 +71,7 @@
             <button
               @click="handlePageChange(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+              class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 cursor-pointer"
               :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
             >
               <span class="sr-only">Previous</span>
@@ -88,10 +88,10 @@
             <template v-for="page in totalPages" :key="page">
               <button
                 @click="handlePageChange(page)"
+                type="button"
                 :class="[
-                  page === currentPage
-                    ? 'relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-                    : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0',
+                  'px-4 py-2 text-sm font-semibold focus:outline-none cursor-pointer',
+                  page === currentPage ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600',
                 ]"
               >
                 {{ page }}
@@ -100,9 +100,10 @@
 
             <!-- Next button -->
             <button
+              type="text"
               @click="handlePageChange(currentPage + 1)"
               :disabled="currentPage === totalPages"
-              class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+              class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 cursor-pointer"
               :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
             >
               <span class="sr-only">Next</span>
@@ -124,16 +125,22 @@
 <script setup>
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useSupabaseStore } from '@/stores/supabase/Supabase'
+import { useProductsStore } from '@/stores/supabase/productsStore'
 import ProductSkeleton from '@/components/loaders/productSkeleton.vue'
 
-const store = useSupabaseStore()
+const store = useProductsStore()
 const { products, loading, error, currentPage, totalPages } = storeToRefs(store)
 
 const handlePageChange = async (newPage) => {
   if (newPage >= 1 && newPage <= totalPages.value) {
     await store.getProducts(newPage)
-    window.scrollTo(0, 0)
+    // Add a small delay before scrolling
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+    }, 0)
   }
 }
 
