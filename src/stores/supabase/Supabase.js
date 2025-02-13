@@ -47,7 +47,32 @@ export const useSupabaseStore = defineStore('supabase', () => {
     }
   }
 
+  // Gets featured_products from supabase
+  const getFeaturedProducts = async () => {
+    loading.value = true
+    error.value = null
+    try {
+      // Fetch items with pagination and status filter
+      const {
+        data: productData,
+        error: supaError,
+      } = await supabase
+        .from('featured_products')
+        .select('*, featured_product_specification(*)', { count: 'exact' })
+        .order('id')
+
+      if (supaError) throw supaError
+
+      products.value = productData
+    } catch (e) {
+      error.value = e.message
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
+    getFeaturedProducts,
     products,
     loading,
     error,
