@@ -1,7 +1,22 @@
 <template>
   <!-- Featured Product -->
-  <div class="mb-12">
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+  <div class="mt-12" v-if="loading">
+    <ProductSkeleton />
+  </div>
+  <div v-else-if="error">Error: {{ error }}</div>
+  <div v-else class="mb-12">
+    <!-- Add this button if you want manual refresh capability Todo::remove from production -->
+    <button
+      @click="refreshProducts"
+      class="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+    >
+      Refresh Products
+    </button>
+    <div
+      v-for="product in featured_products"
+      :key="product.id"
+      class="grid grid-cols-1 gap-8 md:grid-cols-2"
+    >
       <!-- Image -->
       <div class="aspect-square overflow-hidden rounded-lg">
         <img
@@ -14,42 +29,44 @@
       <!-- Product Info -->
       <div class="flex flex-col justify-between">
         <div>
-          <h3 class="text-2xl font-bold text-gray-900">Lister</h3>
+          <!-- Title -->
+          <h3 class="text-2xl font-bold text-gray-900">{{ product.name }}</h3>
           <!-- Description -->
           <p class="mt-4 text-lg text-gray-500">
-            The CWE3D Lister is a 3D printer engineered for reliability, precision, and ease of
-            maintenance. Designed primarily for the South African market, it offers a balanced
-            solution for enthusiasts, businesses, and educational institutions seeking a dependable
-            and high-quality 3D printing experience.
+            {{ product.description }}
           </p>
+          <!-- Specifications -->
           <ul class="mt-4 space-y-2 text-gray-600 list-disc pl-5">
-            <li>CoreXY design with a 250mm x 250mm x 240mm build volume</li>
-            <li>Dual ballscrew Z-axis for superior stability and precision</li>
-            <li>Sensorless homing on all axes for simplified mechanics</li>
-            <li>Custom-designed super flat bed Garolite F4 base (low thermal warp)</li>
-            <li>Open-source design with a focus on maintainability and upgradability</li>
+            <li v-for="spec in product.featured_product_specification" :key="spec.id">
+              {{ spec.specification }}
+            </li>
           </ul>
 
           <!-- Action Buttons -->
           <div class="mt-4">
             <a
-              href="#"
+              :href="product.read_more_url"
               class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
             >
               Read More
             </a>
             <a
-              href="#"
+              :href="product.documentation_url"
               class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
             >
               Documentation
             </a>
-            <a href="#" class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block">
+            <a
+              :href="product.view_3d_url"
+              class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block"
+            >
               3D View
             </a>
           </div>
           <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
-          <p class="mt-6 text-l font-bold text-gray-900 text-right">R34,000</p>
+          <p class="mt-6 text-l font-bold text-gray-900 text-right">
+            R{{ product.price.toFixed(2) }}
+          </p>
         </div>
 
         <!-- Icons -->
@@ -93,8 +110,22 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'FeaturedProduct',
+<script setup>
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useSupabaseStore } from '@/stores/supabase/Supabase'
+import ProductSkeleton from '@/components/loaders/featuredProductSkeleton.vue'
+
+const store = useSupabaseStore()
+const { featured_products, loading, error } = storeToRefs(store)
+
+// Add this function to force a refresh Todo::remove from production
+const refreshProducts = async () => {
+  store.clearFeaturedProductsCache() // Clear the cache first
+  await store.getFeaturedProducts() // Then fetch fresh data
 }
+
+onMounted(async () => {
+  await store.getFeaturedProducts()
+})
 </script>
