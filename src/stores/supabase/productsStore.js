@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from './supabaseClient'
 import { isCacheValid } from './utils/cacheUtils'
-import { logError } from '@/utils/errorLogger'
+import { logError } from '@/stores/supabase/utils/errorLogger'
 
 /**
  * Store for managing product data using Pinia
@@ -10,12 +10,12 @@ import { logError } from '@/utils/errorLogger'
  */
 export const useProductsStore = defineStore('products', () => {
   // State management using refs
-  const products = ref([])          // Stores the current page of products
-  const loading = ref(false)        // Loading state indicator
-  const error = ref(null)           // Error state management
-  const currentPage = ref(1)        // Current page number
-  const totalPages = ref(0)         // Total number of pages
-  const itemsPerPage = 20           // Number of items to display per page
+  const products = ref([]) // Stores the current page of products
+  const loading = ref(false) // Loading state indicator
+  const error = ref(null) // Error state management
+  const currentPage = ref(1) // Current page number
+  const totalPages = ref(0) // Total number of pages
+  const itemsPerPage = 20 // Number of items to display per page
 
   /**
    * Fetches products from Supabase with pagination
@@ -53,16 +53,16 @@ export const useProductsStore = defineStore('products', () => {
       } = await supabase
         .from('products')
         .select('*, product_image(*)', { count: 'exact' }) // Select products with their images
-        .eq('status', true)                                // Only active products
-        .range(offset, offset + itemsPerPage - 1)          // Pagination range
-        .order('id')                                       // Order by ID
+        .eq('status', true) // Only active products
+        .range(offset, offset + itemsPerPage - 1) // Pagination range
+        .order('id') // Order by ID
 
       if (supaError) {
         await logError(supaError, 'productsStore', {
           page,
           offset,
           itemsPerPage,
-          query: 'products.select'
+          query: 'products.select',
         })
         throw supaError
       }
@@ -81,7 +81,7 @@ export const useProductsStore = defineStore('products', () => {
       error.value = e.message
       await logError(e, 'productsStore', {
         page,
-        component: 'productsStore'
+        component: 'productsStore',
       })
     } finally {
       loading.value = false

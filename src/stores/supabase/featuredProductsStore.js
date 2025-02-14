@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from './supabaseClient'
+import { logError } from '@/stores/supabase/utils/errorLogger'
 
 export const useFeaturedProductsStore = defineStore('featuredProducts', () => {
   const featured_products = ref([])
@@ -25,12 +26,20 @@ export const useFeaturedProductsStore = defineStore('featuredProducts', () => {
         .eq('status', true)
         .order('id')
 
-      if (supaError) throw supaError
+      if (supaError) {
+        await logError(supaError, 'featuredProductsStore', {
+          query: 'featured_products.select',
+        })
+        throw supaError
+      }
 
       featured_products.value = featuredProductData
       localStorage.setItem('featured_products', JSON.stringify(featuredProductData))
     } catch (e) {
       error.value = e.message
+      await logError(e, 'featuredProductsStore', {
+        component: 'featuredProductsStore',
+      })
     } finally {
       loading.value = false
     }
