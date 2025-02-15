@@ -43,7 +43,7 @@
         <button
           @click="handlePageChange(currentPage - 1)"
           :disabled="currentPage === 1"
-          class="relative inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700"
           :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
         >
           Previous
@@ -51,7 +51,7 @@
         <button
           @click="handlePageChange(currentPage + 1)"
           :disabled="currentPage === totalPages"
-          class="relative ml-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          class="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700"
           :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
         >
           Next
@@ -66,12 +66,12 @@
           </p>
         </div>
         <div>
-          <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+          <nav class="isolate inline-flex -space-x-px" aria-label="Pagination">
             <!-- Previous button -->
             <button
               @click="handlePageChange(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 cursor-pointer"
+              class="relative inline-flex items-center px-2 py-2 text-gray-400 cursor-pointer"
               :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
             >
               <span class="sr-only">Previous</span>
@@ -91,7 +91,7 @@
                 type="button"
                 :class="[
                   'px-4 py-2 text-sm font-semibold focus:outline-none cursor-pointer',
-                  page === currentPage ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600',
+                  page === currentPage ? 'text-black' : 'text-gray-500 hover:text-black',
                 ]"
               >
                 {{ page }}
@@ -103,7 +103,7 @@
               type="text"
               @click="handlePageChange(currentPage + 1)"
               :disabled="currentPage === totalPages"
-              class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 cursor-pointer"
+              class="relative inline-flex items-center px-2 py-2 text-gray-400 cursor-pointer"
               :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
             >
               <span class="sr-only">Next</span>
@@ -138,7 +138,6 @@ const handlePageChange = async (newPage) => {
     setTimeout(() => {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth',
       })
     }, 0)
   }
