@@ -26,14 +26,13 @@ export const useProductsStore = defineStore('products', () => {
     loading.value = true
     error.value = null
 
-    // Generate cache keys for the current page
-    const cacheKey = `products_page_${page}`
+    // Updated cache keys with 'products.' prefix
+    const cacheKey = `products.page_${page}`
     const cachedData = localStorage.getItem(cacheKey)
-    const cachedCount = localStorage.getItem('products_total_count')
+    const cachedCount = localStorage.getItem('products.total_count')
 
     // Check if valid cached data exists
     if (cachedData && cachedCount && isCacheValid(cacheKey)) {
-      // Use cached data instead of making API call
       products.value = JSON.parse(cachedData)
       currentPage.value = page
       totalPages.value = Math.ceil(JSON.parse(cachedCount) / itemsPerPage)
@@ -72,11 +71,11 @@ export const useProductsStore = defineStore('products', () => {
       currentPage.value = page
       totalPages.value = Math.ceil(count / itemsPerPage)
 
-      // Cache the results
+      // Updated cache storage with 'products.' prefix
       localStorage.setItem(cacheKey, JSON.stringify(productData))
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
-      localStorage.setItem('products_total_count', JSON.stringify(count))
-      localStorage.setItem('products_total_count_timestamp', Date.now().toString())
+      localStorage.setItem('products.total_count', JSON.stringify(count))
+      localStorage.setItem('products.total_count_timestamp', Date.now().toString())
     } catch (e) {
       error.value = e.message
       await logError(e, 'productsStore', {
@@ -94,12 +93,12 @@ export const useProductsStore = defineStore('products', () => {
    */
   const clearProductsCache = () => {
     for (let i = 1; i <= totalPages.value; i++) {
-      const cacheKey = `products_page_${i}`
+      const cacheKey = `products.page_${i}`
       localStorage.removeItem(cacheKey)
       localStorage.removeItem(`${cacheKey}_timestamp`)
     }
-    localStorage.removeItem('products_total_count')
-    localStorage.removeItem('products_total_count_timestamp')
+    localStorage.removeItem('products.total_count')
+    localStorage.removeItem('products.total_count_timestamp')
   }
 
   // Expose store properties and methods
