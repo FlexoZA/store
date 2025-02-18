@@ -61,7 +61,7 @@
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-6 w-6 text-gray-600"
-                :fill="cartStore.getCartCount() > 0 ? 'currentColor' : 'none'"
+                :fill="cartStore.cartItems.length > 0 ? 'currentColor' : 'none'"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
@@ -73,10 +73,10 @@
                 />
               </svg>
               <span
-                v-if="cartStore.getCartCount() > 0"
+                v-if="cartStore.cartItems.length > 0"
                 class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
               >
-                {{ cartStore.getCartCount() }}
+                {{ cartStore.cartItems.length }}
               </span>
             </button>
 
@@ -157,7 +157,8 @@
 
                 <button
                   @click="handleCheckout"
-                  class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors duration-200"
+                  :disabled="!cartHasItems"
+                  class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors duration-200 checkout-button"
                 >
                   Checkout
                 </button>
@@ -266,7 +267,7 @@
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-6 w-6 text-gray-600"
-                :fill="cartStore.getCartCount() > 0 ? 'currentColor' : 'none'"
+                :fill="cartStore.cartItems.length > 0 ? 'currentColor' : 'none'"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
@@ -278,10 +279,10 @@
                 />
               </svg>
               <span
-                v-if="cartStore.getCartCount() > 0"
+                v-if="cartStore.cartItems.length > 0"
                 class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
               >
-                {{ cartStore.getCartCount() }}
+                {{ cartStore.cartItems.length }}
               </span>
             </div>
             <span class="text-sm text-gray-600">Cart</span>
@@ -306,6 +307,7 @@
 <script>
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
 import ConfirmationDialog from '@/components/modals/ConfirmationDialog.vue'
 
@@ -328,7 +330,8 @@ export default {
   setup() {
     const cartStore = useShoppingCartStore()
     const { getCartCount } = storeToRefs(cartStore)
-    return { cartStore, getCartCount }
+    const cartHasItems = computed(() => cartStore.cartItems.length > 0)
+    return { cartStore, getCartCount, cartHasItems }
   },
   methods: {
     handleLogin() {
@@ -383,3 +386,10 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.checkout-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>

@@ -28,13 +28,34 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
         quantity: product.quantity || 1,
       })
     }
+
+    // Emit custom event for alert
+    window.dispatchEvent(
+      new CustomEvent('show-alert', {
+        detail: {
+          message: `${product.name} added to cart`,
+          type: 'success',
+        },
+      }),
+    )
   }
 
   // Remove item from cart
   const removeFromCart = (productId) => {
     const index = cartItems.value.findIndex((item) => item.id === productId)
     if (index > -1) {
+      const item = cartItems.value[index]
       cartItems.value.splice(index, 1)
+
+      // Add alert for removal
+      window.dispatchEvent(
+        new CustomEvent('show-alert', {
+          detail: {
+            message: `${item.name} removed from cart`,
+            type: 'error',
+          },
+        }),
+      )
     }
   }
 
@@ -46,6 +67,15 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
         removeFromCart(productId)
       } else {
         item.quantity = quantity
+        // Add alert for update
+        window.dispatchEvent(
+          new CustomEvent('show-alert', {
+            detail: {
+              message: `${item.name} quantity updated`,
+              type: 'success',
+            },
+          }),
+        )
       }
     }
   }
@@ -75,6 +105,11 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     return cartItems.value.some((item) => item.id === productId)
   }
 
+  // Get total number of items in cart
+  const getTotalItems = () => {
+    return cartItems.value.reduce((total, item) => total + item.quantity, 0)
+  }
+
   return {
     cartItems,
     addToCart,
@@ -84,5 +119,6 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     getCartTotal,
     getCartCount,
     isInCart,
+    getTotalItems,
   }
 })

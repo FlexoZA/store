@@ -24,20 +24,21 @@
       <!-- Product Card -->
       <div v-for="product in products" :key="product.id" class="group relative">
         <a href="#">
-          <!-- Product Image -->
-          <!-- TODO: Implement dynamic image loading -->
-          <!--
-          <img
-            :src="item.image || '@/assets/products/alt/C_trunking.jpg'"
-            :alt="item.name"
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
-          -->
-          <img
-            src="@/assets/products/alt/C_trunking.jpg"
-            alt="Tall slender porcelain bottle with natural clay textured body and cork stopper."
-            class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
-          />
+          <!-- Product Image Container with Relative Positioning -->
+          <div class="relative">
+            <img
+              src="@/assets/products/alt/C_trunking.jpg"
+              alt="Tall slender porcelain bottle with natural clay textured body and cork stopper."
+              class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
+            />
+            <!-- Out of Stock Banner -->
+            <div
+              v-if="product.quantity <= 0"
+              class="absolute bottom-0 left-0 right-0 bg-red-400 text-white text-center py-1 text-sm font-medium rounded-b-lg"
+            >
+              Out of Stock
+            </div>
+          </div>
 
           <!-- Product Details -->
           <h3 class="mt-4 text-sm text-gray-700">{{ product.name }}</h3>
@@ -49,7 +50,14 @@
               <!-- Add to Cart Button -->
               <button
                 class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 cursor-pointer transition-all"
-                @click.prevent="openAddToCartModal(product)"
+                :class="{
+                  'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-gray-400':
+                    product.quantity <= 0,
+                  'text-gray-400': isInCart(product.id),
+                }"
+                @click.prevent="product.quantity > 0 && openAddToCartModal(product)"
+                :disabled="product.quantity <= 0"
+                :title="product.quantity <= 0 ? 'Out of stock' : ''"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +66,6 @@
                   stroke-width="1.5"
                   stroke="currentColor"
                   class="w-5 h-5"
-                  :class="{ 'text-gray-400': isInCart(product.id) }"
                 >
                   <path
                     stroke-linecap="round"
