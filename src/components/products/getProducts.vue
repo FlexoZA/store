@@ -9,14 +9,6 @@
 
   <!-- Main Content -->
   <div v-else>
-    <!-- Debug: Refresh Button (Development Only) -->
-    <button
-      @click="refreshProducts"
-      class="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-    >
-      Refresh Products
-    </button>
-
     <!-- Products Grid -->
     <div
       class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
@@ -225,12 +217,6 @@ const handlePageChange = async (newPage) => {
       })
     }, 0)
   }
-}
-
-// Development Tools
-const refreshProducts = async () => {
-  store.clearProductsCache() // Clear the cache first Todo::remove from production
-  await store.getProducts(currentPage.value) // Fetch fresh data for current page
 }
 
 // Cart and Wishlist Functions

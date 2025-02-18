@@ -33,8 +33,40 @@
               type="text"
               v-model="searchQuery"
               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Search..."
+              placeholder="Search products..."
+              @focus="showSearchResults = true"
+              @blur="setTimeout(() => (showSearchResults = false), 200)"
             />
+
+            <!-- Search Results Dropdown -->
+            <div
+              v-if="showSearchResults && searchQuery.trim()"
+              class="absolute mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 z-50"
+            >
+              <div v-if="searchLoading" class="p-4 text-center text-gray-500">Searching...</div>
+              <div v-else-if="searchResults.length === 0" class="p-4 text-center text-gray-500">
+                No products found
+              </div>
+              <div v-else class="max-h-96 overflow-y-auto">
+                <div
+                  v-for="product in searchResults"
+                  :key="product.id"
+                  class="p-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
+                  @click="router.push(`/product/${product.id}`)"
+                >
+                  <img
+                    v-if="product.product_image && product.product_image[0]"
+                    :src="product.product_image[0].url"
+                    :alt="product.name"
+                    class="w-12 h-12 object-cover rounded"
+                  />
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                    <div class="text-sm text-gray-500">R{{ product.price.toFixed(2) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -57,7 +89,10 @@
             </svg>
           </button>
           <div class="relative group">
-            <button class="p-2 rounded-full hover:bg-gray-100 relative" @click="handleCart">
+            <button
+              class="p-2 rounded-full cursor-pointer hover:bg-gray-100 relative"
+              @click="handleCart"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-6 w-6 text-gray-600"
@@ -82,7 +117,11 @@
 
             <!-- Cart Dropdown -->
             <div
-              class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 invisible group-hover:visible transition-all duration-300 z-50"
+              ref="cartDropdown"
+              v-show="isCartOpen"
+              class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 transition-all duration-300 z-50"
+              @mouseenter="isCartOpen = true"
+              @mouseleave="isCartOpen = false"
             >
               <!-- Cart Header -->
               <div class="p-4 border-b border-gray-200">
@@ -122,7 +161,7 @@
                           >
                           <button
                             @click.stop="confirmRemoveItem(item)"
-                            class="p-1 hover:bg-gray-200 rounded-full"
+                            class="p-1 hover:bg-gray-200 rounded-full cursor-pointer"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +197,7 @@
                 <button
                   @click="handleCheckout"
                   :disabled="!cartHasItems"
-                  class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors duration-200 checkout-button"
+                  class="w-full bg-blue-500 text-white py-2 cursor-pointer px-4 rounded-md hover:bg-blue-600 transition-colors duration-200 checkout-button"
                 >
                   Checkout
                 </button>
@@ -307,9 +346,11 @@
 <script>
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
 import ConfirmationDialog from '@/components/modals/ConfirmationDialog.vue'
+import { useProductsStore } from '@/stores/supabase/productsStore'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'NavigationBar',
@@ -320,27 +361,66 @@ export default {
   data() {
     return {
       isMenuOpen: false,
-      searchQuery: '',
       showEditModal: false,
       showConfirmDialog: false,
       selectedProduct: null,
       itemToRemove: null,
+      isCartOpen: false,
     }
   },
   setup() {
     const cartStore = useShoppingCartStore()
+    const productsStore = useProductsStore()
+    const router = useRouter()
+    const searchQuery = ref('')
+    const showSearchResults = ref(false)
+
     const { getCartCount } = storeToRefs(cartStore)
+    const { searchResults, searchLoading } = storeToRefs(productsStore)
     const cartHasItems = computed(() => cartStore.cartItems.length > 0)
-    return { cartStore, getCartCount, cartHasItems }
+
+    // Debounce function to prevent too many API calls
+    const debounce = (fn, delay) => {
+      let timeoutId
+      return (...args) => {
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => fn(...args), delay)
+      }
+    }
+
+    // Debounced search function
+    const debouncedSearch = debounce((query) => {
+      productsStore.searchProducts(query)
+    }, 300)
+
+    // Watch for search query changes
+    watch(searchQuery, (newQuery) => {
+      if (newQuery.trim()) {
+        debouncedSearch(newQuery)
+        showSearchResults.value = true
+      } else {
+        showSearchResults.value = false
+      }
+    })
+
+    return {
+      cartStore,
+      getCartCount,
+      cartHasItems,
+      searchQuery,
+      searchResults,
+      searchLoading,
+      showSearchResults,
+      router,
+    }
   },
   methods: {
     handleLogin() {
-      // Implement login logic
+      // Implement login
       console.log('Login clicked')
     },
     handleCart() {
-      // Implement cart logic
-      console.log('Cart clicked')
+      this.isCartOpen = !this.isCartOpen
     },
     handleCheckout() {
       console.log('Checkout clicked')
@@ -363,6 +443,7 @@ export default {
     confirmRemoveItem(item) {
       this.itemToRemove = item
       this.showConfirmDialog = true
+      this.isCartOpen = false
     },
 
     removeConfirmedItem() {

@@ -16,6 +16,8 @@ export const useProductsStore = defineStore('products', () => {
   const currentPage = ref(1) // Current page number
   const totalPages = ref(0) // Total number of pages
   const itemsPerPage = 20 // Number of items to display per page
+  const searchResults = ref([]) // Add this new state for search results
+  const searchLoading = ref(false) // Add loading state for search
 
   /**
    * Fetches products from Supabase with pagination
@@ -101,6 +103,45 @@ export const useProductsStore = defineStore('products', () => {
     localStorage.removeItem('products.total_count_timestamp')
   }
 
+  /**
+   * Searches products by name
+   * @param {string} query - Search query
+   */
+  const searchProducts = async (query) => {
+    if (!query || query.trim().length < 2) {
+      searchResults.value = []
+      return
+    }
+
+    searchLoading.value = true
+    try {
+      const { data, error: supaError } = await supabase
+        .from('products')
+        .select('id, name, price, product_image(*)')
+        .eq('status', true)
+        .ilike('name', `%${query}%`)
+        .limit(10) // Limit results to prevent performance issues
+
+      if (supaError) {
+        await logError(supaError, 'productsStore', {
+          query,
+          component: 'searchProducts',
+        })
+        throw supaError
+      }
+
+      searchResults.value = data
+    } catch (e) {
+      error.value = e.message
+      await logError(e, 'productsStore', {
+        query,
+        component: 'searchProducts',
+      })
+    } finally {
+      searchLoading.value = false
+    }
+  }
+
   // Expose store properties and methods
   return {
     products,
@@ -110,5 +151,8 @@ export const useProductsStore = defineStore('products', () => {
     totalPages,
     getProducts,
     clearProductsCache,
+    searchProducts,
+    searchResults,
+    searchLoading,
   }
 })

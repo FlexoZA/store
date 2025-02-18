@@ -7,13 +7,6 @@
     </div>
     <div v-else-if="error">Error: {{ error }}</div>
     <div v-else class="mb-12">
-      <!-- Add this button if you want manual refresh capability Todo::remove from production -->
-      <button
-        @click="refreshProducts"
-        class="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-      >
-        Refresh Products
-      </button>
       <div
         v-for="product in featured_products"
         :key="product.id"
@@ -126,12 +119,6 @@ const productsStore = useProductsStore()
 
 const { featured_products, loading, error } = storeToRefs(featuredStore)
 const { currentPage } = storeToRefs(productsStore)
-
-// Add this function to force a refresh Todo::remove from production
-const refreshProducts = async () => {
-  featuredStore.clearFeaturedProductsCache() // Clear the cache first
-  await featuredStore.getFeaturedProducts() // Then fetch fresh data
-}
 
 onMounted(async () => {
   if (currentPage.value === 1) {
