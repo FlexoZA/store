@@ -58,6 +58,8 @@ export const useProductsStore = defineStore('products', () => {
         .range(offset, offset + itemsPerPage - 1) // Pagination range
         .order('id') // Order by ID
 
+      console.log('Fetched products:', productData)
+
       if (supaError) {
         await logError(supaError, 'productsStore', {
           page,

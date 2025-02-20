@@ -72,22 +72,87 @@
 
         <!-- Desktop Right Menu -->
         <div class="hidden md:flex items-center space-x-4">
-          <button class="p-2 rounded-full hover:bg-gray-100" @click="handleLogin">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div class="relative">
+            <button
+              class="p-2 rounded-full hover:bg-gray-100"
+              @click="toggleUserMenu"
+              ref="userMenuButton"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-gray-600"
+                :fill="user ? 'currentColor' : 'none'"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </button>
+
+            <!-- User Dropdown Menu -->
+            <div
+              v-if="showUserMenu"
+              class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+            >
+              <div v-if="user">
+                <div class="px-4 py-2 border-b border-gray-100">
+                  <p class="text-sm text-gray-600">Welcome,</p>
+                  <p class="font-medium text-gray-800">{{ user.email }}</p>
+                </div>
+                <ul>
+                  <li>
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      @click="navigateTo('/account')"
+                    >
+                      My Account
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      @click="navigateTo('/favorites')"
+                    >
+                      Favorites
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      @click="confirmLogout"
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div v-else>
+                <ul>
+                  <li>
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      @click="showLoginDialog = true"
+                    >
+                      Login
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      @click="showRegistrationDialog = true"
+                    >
+                      Register
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
           <div class="relative group">
             <button
               class="p-2 rounded-full cursor-pointer hover:bg-gray-100 relative"
@@ -285,7 +350,7 @@
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-6 w-6 text-gray-600"
-              fill="none"
+              :fill="user ? 'currentColor' : 'none'"
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
@@ -341,130 +406,183 @@
     @confirm="removeConfirmedItem"
     @cancel="cancelRemoveItem"
   />
+
+  <UserRegistrationDialog :show="showRegistrationDialog" @close="showRegistrationDialog = false" />
+
+  <ConfirmationDialog
+    :show="showLogoutDialog"
+    title="Confirm Logout"
+    message="Are you sure you want to logout?"
+    @confirm="handleLogout"
+    @cancel="showLogoutDialog = false"
+  />
+
+  <UserLogin :is-open="showLoginDialog" @close="showLoginDialog = false" />
 </template>
 
-<script>
+<script setup>
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
 import ConfirmationDialog from '@/components/modals/ConfirmationDialog.vue'
 import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useRouter } from 'vue-router'
+import UserRegistrationDialog from '@/components/authentication/UserRegistrationDialog.vue'
+import { useAuthStore } from '@/stores/authentication/authenticationStore'
+import UserLogin from '@/components/authentication/UserLogin.vue'
 
-export default {
-  name: 'NavigationBar',
-  components: {
-    AddToCartModal,
-    ConfirmationDialog,
-  },
-  data() {
-    return {
-      isMenuOpen: false,
-      showEditModal: false,
-      showConfirmDialog: false,
-      selectedProduct: null,
-      itemToRemove: null,
-      isCartOpen: false,
-    }
-  },
-  setup() {
-    const cartStore = useShoppingCartStore()
-    const productsStore = useProductsStore()
-    const router = useRouter()
-    const searchQuery = ref('')
-    const showSearchResults = ref(false)
+// Stores and Router
+const cartStore = useShoppingCartStore()
+const productsStore = useProductsStore()
+const authStore = useAuthStore()
+const router = useRouter()
 
-    const { getCartCount } = storeToRefs(cartStore)
-    const { searchResults, searchLoading } = storeToRefs(productsStore)
-    const cartHasItems = computed(() => cartStore.cartItems.length > 0)
+// Refs
+const isMenuOpen = ref(false)
+const showEditModal = ref(false)
+const showConfirmDialog = ref(false)
+const showRegistrationDialog = ref(false)
+const showLoginDialog = ref(false)
+const selectedProduct = ref(null)
+const itemToRemove = ref(null)
+const isCartOpen = ref(false)
+const showUserMenu = ref(false)
+const showLogoutDialog = ref(false)
+const searchQuery = ref('')
+const showSearchResults = ref(false)
+const userMenuButton = ref(null)
 
-    // Debounce function to prevent too many API calls
-    const debounce = (fn, delay) => {
-      let timeoutId
-      return (...args) => {
-        clearTimeout(timeoutId)
-        timeoutId = setTimeout(() => fn(...args), delay)
-      }
-    }
+// Store refs
+const { searchResults, searchLoading } = storeToRefs(productsStore)
+const { user } = storeToRefs(authStore)
 
-    // Debounced search function
-    const debouncedSearch = debounce((query) => {
-      productsStore.searchProducts(query)
-    }, 300)
+// Computed
+const cartHasItems = computed(() => cartStore.cartItems.length > 0)
 
-    // Watch for search query changes
-    watch(searchQuery, (newQuery) => {
-      if (newQuery.trim()) {
-        debouncedSearch(newQuery)
-        showSearchResults.value = true
-      } else {
-        showSearchResults.value = false
-      }
-    })
+// Methods
+const handleLogin = () => {
+  showRegistrationDialog.value = true
+}
 
-    return {
-      cartStore,
-      getCartCount,
-      cartHasItems,
-      searchQuery,
-      searchResults,
-      searchLoading,
-      showSearchResults,
-      router,
-    }
-  },
-  methods: {
-    handleLogin() {
-      // Implement login
-      console.log('Login clicked')
-    },
-    handleCart() {
-      this.isCartOpen = !this.isCartOpen
-    },
-    handleCheckout() {
-      console.log('Checkout clicked')
-    },
-    openEditModal(item) {
-      this.selectedProduct = {
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: this.cartStore.cartItems.find((i) => i.id === item.id)?.quantity || 0,
-      }
-      this.showEditModal = true
-    },
+const handleCart = () => {
+  isCartOpen.value = !isCartOpen.value
+}
 
-    closeEditModal() {
-      this.showEditModal = false
-      this.selectedProduct = null
-    },
+const handleCheckout = () => {
+  console.log('Checkout clicked')
+}
 
-    confirmRemoveItem(item) {
-      this.itemToRemove = item
-      this.showConfirmDialog = true
-      this.isCartOpen = false
-    },
+const openEditModal = (item) => {
+  selectedProduct.value = {
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: cartStore.cartItems.find((i) => i.id === item.id)?.quantity || 0,
+  }
+  showEditModal.value = true
+}
 
-    removeConfirmedItem() {
-      if (this.itemToRemove) {
-        this.cartStore.removeFromCart(this.itemToRemove.id)
-        this.itemToRemove = null
-      }
-      this.showConfirmDialog = false
-    },
+const closeEditModal = () => {
+  showEditModal.value = false
+  selectedProduct.value = null
+}
 
-    cancelRemoveItem() {
-      this.itemToRemove = null
-      this.showConfirmDialog = false
-    },
-  },
-  watch: {
-    searchQuery(newValue) {
-      // Implement search logic
-      console.log('Search query:', newValue)
-    },
-  },
+const confirmRemoveItem = (item) => {
+  itemToRemove.value = item
+  showConfirmDialog.value = true
+  isCartOpen.value = false
+}
+
+const removeConfirmedItem = () => {
+  if (itemToRemove.value) {
+    cartStore.removeFromCart(itemToRemove.value.id)
+    itemToRemove.value = null
+  }
+  showConfirmDialog.value = false
+}
+
+const cancelRemoveItem = () => {
+  itemToRemove.value = null
+  showConfirmDialog.value = false
+}
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+}
+
+const closeUserMenu = () => {
+  showUserMenu.value = false
+}
+
+const confirmLogout = () => {
+  showLogoutDialog.value = true
+  closeUserMenu()
+}
+
+const handleLogout = async () => {
+  try {
+    await authStore.signOut()
+    showLogoutDialog.value = false
+    router.push('/')
+    showAlert('Successfully logged out!', 'success')
+  } catch (error) {
+    console.error('Logout failed:', error)
+    showAlert('Logout failed', 'error')
+  }
+}
+
+const navigateTo = (path) => {
+  router.push(path)
+  closeUserMenu()
+}
+
+const handleClickOutside = (event) => {
+  if (showUserMenu.value && !userMenuButton.value?.contains(event.target)) {
+    closeUserMenu()
+  }
+}
+
+// Debounce function
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+}
+
+// Debounced search
+const debouncedSearch = debounce((query) => {
+  productsStore.searchProducts(query)
+}, 300)
+
+// Watch search query
+watch(searchQuery, (newQuery) => {
+  if (newQuery.trim()) {
+    debouncedSearch(newQuery)
+    showSearchResults.value = true
+  } else {
+    showSearchResults.value = false
+  }
+})
+
+// Lifecycle hooks
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// Add helper function for alerts
+const showAlert = (message, type = 'success', timeout = 3000) => {
+  window.dispatchEvent(
+    new CustomEvent('show-alert', {
+      detail: { message, type, timeout },
+    }),
+  )
 }
 </script>
 
