@@ -144,10 +144,13 @@
               v-model="formData.phone"
               type="tel"
               required
+              @input="handlePhoneInput"
+              placeholder="+27 XX XXX XXXX"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               :class="{ 'border-red-500': phoneError }"
             />
             <p v-if="phoneError" class="mt-1 text-sm text-red-500">{{ phoneError }}</p>
+            <p class="mt-1 text-xs text-gray-500">Format: +27 XX XXX XXXX (South African number)</p>
           </div>
 
           <!-- Address textarea -->
@@ -171,7 +174,7 @@
           <div class="flex justify-end gap-3 mt-6">
             <button
               type="button"
-              @click="$emit('close')"
+              @click="handleClose"
               class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
               Cancel
@@ -192,10 +195,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
 import { useRouter } from 'vue-router'
 import backgroundImage from '@/assets/ListerBG.jpg'
+import {
+  validateEmail,
+  validatePassword,
+  validatePhone,
+  formatPhoneNumber,
+} from '@/utils/validation'
 
 // Props definition
 const { show } = defineProps({
@@ -213,14 +222,6 @@ const loading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
 
-// Form validation rules
-const passwordRules = {
-  minLength: 8,
-  requiresNumber: true,
-  requiresSpecial: true,
-  requiresUppercase: true,
-}
-
 // Form data object with confirm password
 const formData = ref({
   email: '',
@@ -233,42 +234,15 @@ const formData = ref({
 })
 
 // Validation computed properties
-const emailError = computed(() => {
-  if (!formData.value.email) return ''
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailPattern.test(formData.value.email) ? '' : 'Please enter a valid email address'
-})
-
-const passwordError = computed(() => {
-  if (!formData.value.password) return ''
-  const errors = []
-
-  if (formData.value.password.length < passwordRules.minLength) {
-    errors.push(`Password must be at least ${passwordRules.minLength} characters`)
-  }
-  if (passwordRules.requiresNumber && !/\d/.test(formData.value.password)) {
-    errors.push('Password must contain at least one number')
-  }
-  if (passwordRules.requiresSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(formData.value.password)) {
-    errors.push('Password must contain at least one special character')
-  }
-  if (passwordRules.requiresUppercase && !/[A-Z]/.test(formData.value.password)) {
-    errors.push('Password must contain at least one uppercase letter')
-  }
-
-  return errors.length ? errors.join('. ') : ''
-})
+const emailError = computed(() => validateEmail(formData.value.email))
+const passwordError = computed(() => validatePassword(formData.value.password))
 
 const confirmPasswordError = computed(() => {
   if (!formData.value.confirmPassword) return ''
   return formData.value.password === formData.value.confirmPassword ? '' : 'Passwords do not match'
 })
 
-const phoneError = computed(() => {
-  if (!formData.value.phone) return ''
-  const phonePattern = /^\+?[\d\s-]{10,}$/
-  return phonePattern.test(formData.value.phone) ? '' : 'Please enter a valid phone number'
-})
+const phoneError = computed(() => validatePhone(formData.value.phone))
 
 const isFormValid = computed(() => {
   return (
@@ -298,6 +272,10 @@ const resetForm = () => {
     address: '',
   }
   error.value = ''
+}
+
+const handlePhoneInput = () => {
+  formData.value.phone = formatPhoneNumber(formData.value.phone)
 }
 
 // Handle form submission
@@ -355,5 +333,23 @@ const handleRegistration = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// Watch for dialog closing from parent
+watch(
+  () => show,
+  (newValue) => {
+    if (!newValue) {
+      resetForm()
+      showPassword.value = false
+    }
+  },
+)
+
+// Add close handler
+const handleClose = () => {
+  resetForm()
+  showPassword.value = false
+  emit('close')
 }
 </script>

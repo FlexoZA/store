@@ -122,12 +122,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
 import backgroundImage from '@/assets/ListerBG.jpg'
+import { validateEmail, validatePassword } from '@/utils/validation'
 
 // Props definition
-defineProps({
+const props = defineProps({
   isOpen: {
     type: Boolean,
     required: true,
@@ -143,25 +144,35 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 // Email validation using computed property
-const emailError = computed(() => {
-  if (!email.value) return ''
-  const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return pattern.test(email.value) ? '' : 'Invalid email format'
-})
+const emailError = computed(() => validateEmail(email.value))
 
 // Password validation using computed property
-const passwordError = computed(() => {
-  if (!password.value) return ''
-  return password.value.length >= 6 ? '' : 'Minimum 6 characters'
-})
+const passwordError = computed(() => validatePassword(password.value))
 
 // Define emits for parent component communication
 const emit = defineEmits(['close'])
 
 // Close dialog handler
 const closeDialog = () => {
+  email.value = ''
+  password.value = ''
+  errorMessage.value = ''
+  showPassword.value = false
   emit('close')
 }
+
+// Watch for dialog closing from parent
+watch(
+  () => props.isOpen,
+  (newValue) => {
+    if (!newValue) {
+      email.value = ''
+      password.value = ''
+      errorMessage.value = ''
+      showPassword.value = false
+    }
+  },
+)
 
 // Alert helper function to show notifications
 const showAlert = (message, type = 'success', timeout = 3000) => {
@@ -175,7 +186,10 @@ const showAlert = (message, type = 'success', timeout = 3000) => {
 // Login form submission handler
 const handleLogin = async () => {
   // Validate form before submission
-  if (emailError.value || passwordError.value) return
+  if (emailError.value || passwordError.value) {
+    errorMessage.value = 'Please fix all validation errors before submitting'
+    return
+  }
   if (!email.value || !password.value) {
     errorMessage.value = 'Please fill in all fields'
     return

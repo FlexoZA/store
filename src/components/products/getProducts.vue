@@ -17,16 +17,30 @@
       <div v-for="product in products" :key="product.id" class="group relative">
         <a href="#">
           <!-- Product Image Container with Relative Positioning -->
-          <div class="relative">
+          <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
+            <!-- Loading Skeleton -->
+            <div
+              v-if="!imageLoaded[product.id] && getImageUrl(product) !== '/placeholder.jpg'"
+              class="absolute inset-0 animate-pulse bg-gray-200"
+            ></div>
+
+            <!-- Product Image -->
             <img
-              :src="product.product_image?.[0]?.url || '@/assets/products/alt/C_trunking.jpg'"
+              :src="getImageUrl(product)"
               :alt="product.name"
-              class="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"
+              class="h-full w-full object-cover object-center transition-opacity duration-300"
+              :class="{
+                'opacity-0':
+                  !imageLoaded[product.id] && getImageUrl(product) !== '/placeholder.jpg',
+              }"
+              @load="handleImageLoad(product.id)"
+              @error="handleImageError(product.id)"
             />
+
             <!-- Out of Stock Banner -->
             <div
               v-if="product.quantity <= 0"
-              class="absolute bottom-0 left-0 right-0 bg-red-400 text-white text-center py-1 text-sm font-medium rounded-b-lg"
+              class="absolute bottom-0 left-0 right-0 bg-red-400 text-white text-center py-1 text-sm font-medium"
             >
               Out of Stock
             </div>
@@ -193,7 +207,7 @@
 
 <script setup>
 // Imports
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
@@ -206,16 +220,35 @@ const cartStore = useShoppingCartStore()
 const { products, loading, error, currentPage, totalPages } = storeToRefs(store)
 const { isInCart } = cartStore
 
+// Image Loading State Management
+const imageLoaded = ref({})
+const imageError = ref({})
+
+const handleImageLoad = (productId) => {
+  imageLoaded.value[productId] = true
+}
+
+const handleImageError = (productId) => {
+  imageLoaded.value[productId] = true
+  imageError.value[productId] = true
+}
+
+// Reset image states when products change
+watch(
+  products,
+  () => {
+    imageLoaded.value = {}
+    imageError.value = {}
+  },
+  { deep: true },
+)
+
 // Page Navigation Handler
 const handlePageChange = async (newPage) => {
   if (newPage >= 1 && newPage <= totalPages.value) {
+    window.scrollTo({ top: 0 })
+    await new Promise((resolve) => setTimeout(resolve, 100))
     await store.getProducts(newPage)
-    // Add a small delay before scrolling
-    setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-      })
-    }, 0)
   }
 }
 
@@ -242,8 +275,21 @@ const toggleWishlist = (product) => {
   console.log('Toggle wishlist for product:', product.id)
 }
 
+// Add this computed property
+const getImageUrl = (product) => {
+  if (
+    !product?.product_image ||
+    !Array.isArray(product.product_image) ||
+    product.product_image.length === 0
+  ) {
+    return '/placeholder.jpg'
+  }
+  return product.product_image[0].url || '/placeholder.jpg'
+}
+
 // Lifecycle Hooks
 onMounted(async () => {
+  store.clearProductsCache() // Clear cache first
   await store.getProducts()
 })
 </script>

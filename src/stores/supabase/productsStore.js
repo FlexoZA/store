@@ -53,22 +53,25 @@ export const useProductsStore = defineStore('products', () => {
         error: supaError,
       } = await supabase
         .from('products')
-        .select('*, product_image(*)', { count: 'exact' }) // Select products with their images
-        .eq('status', true) // Only active products
-        .range(offset, offset + itemsPerPage - 1) // Pagination range
-        .order('id') // Order by ID
-
-      console.log('Fetched products:', productData)
+        .select(
+          `*,
+          product_image(*)`,
+          { count: 'exact' },
+        )
+        .eq('status', true)
+        .range(offset, offset + itemsPerPage - 1)
+        .order('id')
 
       if (supaError) {
         await logError(supaError, 'productsStore', {
           page,
-          offset,
-          itemsPerPage,
-          query: 'products.select',
+          component: 'productsStore',
         })
         throw supaError
       }
+
+      console.log('Product Data from Supabase:', products)
+      console.log('Total Count:', count)
 
       // Update store state
       products.value = productData

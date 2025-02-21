@@ -157,6 +157,7 @@
             <button
               class="p-2 rounded-full cursor-pointer hover:bg-gray-100 relative"
               @click="handleCart"
+              ref="cartButton"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -185,8 +186,6 @@
               ref="cartDropdown"
               v-show="isCartOpen"
               class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 transition-all duration-300 z-50"
-              @mouseenter="isCartOpen = true"
-              @mouseleave="isCartOpen = false"
             >
               <!-- Cart Header -->
               <div class="p-4 border-b border-gray-200">
@@ -413,6 +412,8 @@
     :show="showLogoutDialog"
     title="Confirm Logout"
     message="Are you sure you want to logout?"
+    :loading="isLoggingOut"
+    confirm-text="Logout"
     @confirm="handleLogout"
     @cancel="showLogoutDialog = false"
   />
@@ -449,9 +450,12 @@ const itemToRemove = ref(null)
 const isCartOpen = ref(false)
 const showUserMenu = ref(false)
 const showLogoutDialog = ref(false)
+const isLoggingOut = ref(false)
 const searchQuery = ref('')
 const showSearchResults = ref(false)
 const userMenuButton = ref(null)
+const cartButton = ref(null)
+const cartDropdown = ref(null)
 
 // Store refs
 const { searchResults, searchLoading } = storeToRefs(productsStore)
@@ -522,6 +526,7 @@ const confirmLogout = () => {
 
 const handleLogout = async () => {
   try {
+    isLoggingOut.value = true
     await authStore.signOut()
     showLogoutDialog.value = false
     router.push('/')
@@ -529,6 +534,8 @@ const handleLogout = async () => {
   } catch (error) {
     console.error('Logout failed:', error)
     showAlert('Logout failed', 'error')
+  } finally {
+    isLoggingOut.value = false
   }
 }
 
@@ -540,6 +547,13 @@ const navigateTo = (path) => {
 const handleClickOutside = (event) => {
   if (showUserMenu.value && !userMenuButton.value?.contains(event.target)) {
     closeUserMenu()
+  }
+  if (
+    isCartOpen.value &&
+    !cartDropdown.value?.contains(event.target) &&
+    !cartButton.value?.contains(event.target)
+  ) {
+    closeCart()
   }
 }
 
@@ -583,6 +597,10 @@ const showAlert = (message, type = 'success', timeout = 3000) => {
       detail: { message, type, timeout },
     }),
   )
+}
+
+const closeCart = () => {
+  isCartOpen.value = false
 }
 </script>
 
