@@ -70,9 +70,6 @@ export const useProductsStore = defineStore('products', () => {
         throw supaError
       }
 
-      console.log('Product Data from Supabase:', products)
-      console.log('Total Count:', count)
-
       // Update store state
       products.value = productData
       currentPage.value = page
@@ -92,20 +89,6 @@ export const useProductsStore = defineStore('products', () => {
     } finally {
       loading.value = false
     }
-  }
-
-  /**
-   * Clears all product-related cache from localStorage
-   * Useful when data needs to be refreshed
-   */
-  const clearProductsCache = () => {
-    for (let i = 1; i <= totalPages.value; i++) {
-      const cacheKey = `products.page_${i}`
-      localStorage.removeItem(cacheKey)
-      localStorage.removeItem(`${cacheKey}_timestamp`)
-    }
-    localStorage.removeItem('products.total_count')
-    localStorage.removeItem('products.total_count_timestamp')
   }
 
   /**
@@ -155,7 +138,6 @@ export const useProductsStore = defineStore('products', () => {
     currentPage,
     totalPages,
     getProducts,
-    clearProductsCache,
     searchProducts,
     searchResults,
     searchLoading,

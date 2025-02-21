@@ -289,7 +289,7 @@ const getImageUrl = (product) => {
 
 // Lifecycle Hooks
 onMounted(async () => {
-  store.clearProductsCache() // Clear cache first
+  //store.clearProductsCache() // Clear cache first
   await store.getProducts()
 })
 </script>
