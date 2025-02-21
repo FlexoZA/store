@@ -1,4 +1,5 @@
 <template>
+  <!-- Main login modal container with background image -->
   <div
     v-if="isOpen"
     class="fixed inset-0 flex items-center justify-center z-50"
@@ -8,13 +9,17 @@
       backgroundPosition: 'center',
     }"
   >
+    <!-- Semi-transparent overlay for background blur -->
     <div class="absolute inset-0 backdrop-brightness-50 backdrop-blur-sm"></div>
 
+    <!-- Login form card -->
     <div class="bg-white rounded-lg w-full max-w-md mx-4 shadow-xl relative" @click.stop>
       <div class="p-6">
         <h2 class="text-2xl font-semibold text-gray-800 mb-6">Login</h2>
 
+        <!-- Login form with email and password inputs -->
         <form @submit.prevent="handleLogin" class="space-y-4">
+          <!-- Email input field -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -27,6 +32,7 @@
             <p v-if="emailError" class="mt-1 text-sm text-red-500">{{ emailError }}</p>
           </div>
 
+          <!-- Password input field with show/hide toggle -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <div class="relative">
@@ -37,11 +43,13 @@
                 required
                 :class="{ 'border-red-500': passwordError }"
               />
+              <!-- Toggle password visibility button -->
               <button
                 type="button"
                 @click="showPassword = !showPassword"
                 class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
               >
+                <!-- Show password icon -->
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   class="h-5 w-5"
@@ -63,6 +71,7 @@
                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
+                <!-- Hide password icon -->
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   class="h-5 w-5"
@@ -83,10 +92,12 @@
             <p v-if="passwordError" class="mt-1 text-sm text-red-500">{{ passwordError }}</p>
           </div>
 
+          <!-- Error message display -->
           <div v-if="errorMessage" class="p-3 bg-red-100 text-red-700 rounded-md">
             {{ errorMessage }}
           </div>
 
+          <!-- Form action buttons -->
           <div class="flex justify-end gap-3 mt-6">
             <button
               type="button"
@@ -115,6 +126,7 @@ import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
 import backgroundImage from '@/assets/ListerBG.jpg'
 
+// Props definition
 defineProps({
   isOpen: {
     type: Boolean,
@@ -122,6 +134,7 @@ defineProps({
   },
 })
 
+// Initialize auth store and reactive variables
 const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
@@ -129,24 +142,28 @@ const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 
+// Email validation using computed property
 const emailError = computed(() => {
   if (!email.value) return ''
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return pattern.test(email.value) ? '' : 'Invalid email format'
 })
 
+// Password validation using computed property
 const passwordError = computed(() => {
   if (!password.value) return ''
   return password.value.length >= 6 ? '' : 'Minimum 6 characters'
 })
 
+// Define emits for parent component communication
 const emit = defineEmits(['close'])
 
+// Close dialog handler
 const closeDialog = () => {
   emit('close')
 }
 
-// Add helper function for alerts
+// Alert helper function to show notifications
 const showAlert = (message, type = 'success', timeout = 3000) => {
   window.dispatchEvent(
     new CustomEvent('show-alert', {
@@ -155,7 +172,9 @@ const showAlert = (message, type = 'success', timeout = 3000) => {
   )
 }
 
+// Login form submission handler
 const handleLogin = async () => {
+  // Validate form before submission
   if (emailError.value || passwordError.value) return
   if (!email.value || !password.value) {
     errorMessage.value = 'Please fill in all fields'
@@ -166,6 +185,7 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
+    // Attempt to sign in using auth store
     const { error } = await authStore.signIn(email.value, password.value)
 
     if (error) {
@@ -174,7 +194,7 @@ const handleLogin = async () => {
       return
     }
 
-    // Only if login was successful
+    // Reset form and close dialog on successful login
     email.value = ''
     password.value = ''
     showAlert('Successfully logged in!', 'success')

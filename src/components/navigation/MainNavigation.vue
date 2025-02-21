@@ -430,7 +430,7 @@ import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useRouter } from 'vue-router'
 import UserRegistrationDialog from '@/components/authentication/UserRegistrationDialog.vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
-import UserLogin from '@/components/authentication/UserLogin.vue'
+import UserLogin from '@/components/authentication/UserLoginDialog.vue'
 
 // Stores and Router
 const cartStore = useShoppingCartStore()

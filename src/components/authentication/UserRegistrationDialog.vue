@@ -1,4 +1,5 @@
 <template>
+  <!-- Main registration modal container with background image -->
   <div
     v-if="show"
     class="fixed inset-0 flex items-center justify-center z-50"
@@ -8,15 +9,17 @@
       backgroundPosition: 'center',
     }"
   >
-    <!-- Change to backdrop-brightness -->
+    <!-- Semi-transparent overlay with blur effect -->
     <div class="absolute inset-0 backdrop-brightness-50 backdrop-blur-sm"></div>
 
-    <!-- Keep existing dialog but make it relative -->
+    <!-- Registration form card -->
     <div class="bg-white rounded-lg w-full max-w-md mx-4 shadow-xl relative" @click.stop>
       <div class="p-6">
         <h2 class="text-2xl font-semibold text-gray-800 mb-6">Create your account</h2>
 
+        <!-- Registration form with user details -->
         <form @submit.prevent="handleRegistration" class="space-y-4">
+          <!-- Email input field -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -25,9 +28,12 @@
               type="email"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              :class="{ 'border-red-500': emailError }"
             />
+            <p v-if="emailError" class="mt-1 text-sm text-red-500">{{ emailError }}</p>
           </div>
 
+          <!-- Password input field with show/hide toggle -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <div class="relative">
@@ -37,7 +43,9 @@
                 :type="showPassword ? 'text' : 'password'"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                :class="{ 'border-red-500': passwordError }"
               />
+              <!-- Password visibility toggle button -->
               <button
                 type="button"
                 @click="showPassword = !showPassword"
@@ -81,8 +89,29 @@
                 </svg>
               </button>
             </div>
+            <p v-if="passwordError" class="mt-1 text-sm text-red-500">{{ passwordError }}</p>
           </div>
 
+          <!-- Confirm Password input field -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <div class="relative">
+              <input
+                id="confirmPassword"
+                v-model="formData.confirmPassword"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                :class="{ 'border-red-500': confirmPasswordError }"
+              />
+            </div>
+            <p v-if="confirmPasswordError" class="mt-1 text-sm text-red-500">
+              {{ confirmPasswordError }}
+            </p>
+          </div>
+
+          <!-- Personal information fields -->
+          <!-- Name input -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input
@@ -94,6 +123,7 @@
             />
           </div>
 
+          <!-- Surname input -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Surname</label>
             <input
@@ -105,6 +135,8 @@
             />
           </div>
 
+          <!-- Contact information fields -->
+          <!-- Phone number input -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
             <input
@@ -113,9 +145,12 @@
               type="tel"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              :class="{ 'border-red-500': phoneError }"
             />
+            <p v-if="phoneError" class="mt-1 text-sm text-red-500">{{ phoneError }}</p>
           </div>
 
+          <!-- Address textarea -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
             <textarea
@@ -127,10 +162,12 @@
             ></textarea>
           </div>
 
+          <!-- Error message display -->
           <div v-if="error" class="p-3 bg-red-100 text-red-700 rounded-md">
             {{ error }}
           </div>
 
+          <!-- Form action buttons -->
           <div class="flex justify-end gap-3 mt-6">
             <button
               type="button"
@@ -141,7 +178,7 @@
             </button>
             <button
               type="submit"
-              :disabled="loading"
+              :disabled="loading || !isFormValid"
               class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span v-if="loading">Creating account...</span>
@@ -155,11 +192,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
 import { useRouter } from 'vue-router'
 import backgroundImage from '@/assets/ListerBG.jpg'
 
+// Props definition
 const { show } = defineProps({
   show: {
     type: Boolean,
@@ -167,6 +205,7 @@ const { show } = defineProps({
   },
 })
 
+// Initialize required composables and refs
 const emit = defineEmits(['close'])
 const authStore = useAuthStore()
 const router = useRouter()
@@ -174,20 +213,106 @@ const loading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
 
+// Form validation rules
+const passwordRules = {
+  minLength: 8,
+  requiresNumber: true,
+  requiresSpecial: true,
+  requiresUppercase: true,
+}
+
+// Form data object with confirm password
 const formData = ref({
   email: '',
   password: '',
+  confirmPassword: '',
   name: '',
   surname: '',
   phone: '',
   address: '',
 })
 
+// Validation computed properties
+const emailError = computed(() => {
+  if (!formData.value.email) return ''
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailPattern.test(formData.value.email) ? '' : 'Please enter a valid email address'
+})
+
+const passwordError = computed(() => {
+  if (!formData.value.password) return ''
+  const errors = []
+
+  if (formData.value.password.length < passwordRules.minLength) {
+    errors.push(`Password must be at least ${passwordRules.minLength} characters`)
+  }
+  if (passwordRules.requiresNumber && !/\d/.test(formData.value.password)) {
+    errors.push('Password must contain at least one number')
+  }
+  if (passwordRules.requiresSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(formData.value.password)) {
+    errors.push('Password must contain at least one special character')
+  }
+  if (passwordRules.requiresUppercase && !/[A-Z]/.test(formData.value.password)) {
+    errors.push('Password must contain at least one uppercase letter')
+  }
+
+  return errors.length ? errors.join('. ') : ''
+})
+
+const confirmPasswordError = computed(() => {
+  if (!formData.value.confirmPassword) return ''
+  return formData.value.password === formData.value.confirmPassword ? '' : 'Passwords do not match'
+})
+
+const phoneError = computed(() => {
+  if (!formData.value.phone) return ''
+  const phonePattern = /^\+?[\d\s-]{10,}$/
+  return phonePattern.test(formData.value.phone) ? '' : 'Please enter a valid phone number'
+})
+
+const isFormValid = computed(() => {
+  return (
+    !emailError.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value &&
+    !phoneError.value &&
+    formData.value.email &&
+    formData.value.password &&
+    formData.value.confirmPassword &&
+    formData.value.name &&
+    formData.value.surname &&
+    formData.value.phone &&
+    formData.value.address
+  )
+})
+
+// Add a new function to reset the form
+const resetForm = () => {
+  formData.value = {
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    surname: '',
+    phone: '',
+    address: '',
+  }
+  error.value = ''
+}
+
+// Handle form submission
 const handleRegistration = async () => {
+  // Validate form before submission
+  if (!isFormValid.value) {
+    error.value = 'Please fix all errors before submitting'
+    return
+  }
+
   loading.value = true
   error.value = ''
 
   try {
+    // Attempt to create new user account
     const { error: signUpError } = await authStore.signUp(
       formData.value.email,
       formData.value.password,
@@ -201,7 +326,7 @@ const handleRegistration = async () => {
 
     if (signUpError) throw signUpError
 
-    // After successful registration, attempt to sign in
+    // Automatically sign in the user after successful registration
     const { error: signInError } = await authStore.signIn(
       formData.value.email,
       formData.value.password,
@@ -209,7 +334,10 @@ const handleRegistration = async () => {
 
     if (signInError) throw signInError
 
-    // Show success message using generalAlerts
+    // Reset the form after successful registration
+    resetForm()
+
+    // Display success message using custom event
     window.dispatchEvent(
       new CustomEvent('show-alert', {
         detail: {
@@ -219,6 +347,7 @@ const handleRegistration = async () => {
       }),
     )
 
+    // Close dialog and redirect to home page
     emit('close')
     router.push('/') // Or your desired redirect path
   } catch (err) {
