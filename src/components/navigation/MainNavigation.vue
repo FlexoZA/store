@@ -12,62 +12,7 @@
 
         <!-- Desktop Search Bar -->
         <div class="hidden md:flex flex-1 justify-center px-8">
-          <div class="relative w-full max-w-md">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              v-model="searchQuery"
-              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Search products..."
-              @focus="showSearchResults = true"
-              @blur="setTimeout(() => (showSearchResults = false), 200)"
-            />
-
-            <!-- Search Results Dropdown -->
-            <div
-              v-if="showSearchResults && searchQuery.trim()"
-              class="absolute mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 z-50"
-            >
-              <div v-if="searchLoading" class="p-4 text-center text-gray-500">Searching...</div>
-              <div v-else-if="searchResults.length === 0" class="p-4 text-center text-gray-500">
-                No products found
-              </div>
-              <div v-else class="max-h-96 overflow-y-auto">
-                <div
-                  v-for="product in searchResults"
-                  :key="product.id"
-                  class="p-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
-                  @click="router.push(`/product/${product.id}`)"
-                >
-                  <img
-                    v-if="product.product_image && product.product_image[0]"
-                    :src="product.product_image[0].url"
-                    :alt="product.name"
-                    class="w-12 h-12 object-cover rounded"
-                  />
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
-                    <div class="text-sm text-gray-500">R{{ product.price.toFixed(2) }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SearchBar />
         </div>
 
         <!-- Desktop Right Menu -->
@@ -78,20 +23,7 @@
               @click="toggleUserMenu"
               ref="userMenuButton"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-gray-600"
-                :fill="user ? 'currentColor' : 'none'"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
+              <UserIcon class="h-6 w-6 text-gray-600" :class="{ 'fill-current': user }" />
             </button>
 
             <!-- User Dropdown Menu -->
@@ -159,20 +91,10 @@
               @click="handleCart"
               ref="cartButton"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
+              <ShoppingCartIcon
                 class="h-6 w-6 text-gray-600"
-                :fill="cartStore.cartItems.length > 0 ? 'currentColor' : 'none'"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+                :class="{ 'fill-current': cartStore.cartItems.length > 0 }"
+              />
               <span
                 v-if="cartStore.cartItems.length > 0"
                 class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
@@ -206,12 +128,22 @@
                     @click="openEditModal(item)"
                   >
                     <!-- Product Image -->
-                    <div class="w-16 h-16 flex-shrink-0">
+                    <div class="relative w-16 h-16 flex-shrink-0">
                       <img
-                        src="https://placehold.co/100x100"
+                        :src="getImageUrl(item)"
                         :alt="item.name"
-                        class="w-full h-full object-cover rounded"
+                        class="w-full h-full object-cover rounded transition-opacity duration-300"
+                        :class="{
+                          'opacity-0':
+                            !imageLoaded[item.id] && getImageUrl(item) !== '/placeholder.jpg',
+                        }"
+                        @load="handleImageLoad(item.id)"
+                        @error="handleImageError(item.id)"
                       />
+                      <div
+                        v-if="!imageLoaded[item.id]"
+                        class="absolute inset-0 bg-gray-100 rounded animate-pulse"
+                      ></div>
                     </div>
 
                     <!-- Product Details -->
@@ -227,20 +159,7 @@
                             @click.stop="confirmRemoveItem(item)"
                             class="p-1 hover:bg-gray-200 rounded-full cursor-pointer"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              class="h-4 w-4 text-gray-500 hover:text-red-500"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
+                            <TrashIcon class="h-4 w-4 text-gray-500 hover:text-red-500" />
                           </button>
                         </div>
                       </div>
@@ -276,36 +195,8 @@
             @click="isMenuOpen = !isMenuOpen"
             class="p-2 rounded-md text-gray-600 hover:bg-gray-100"
           >
-            <svg
-              v-if="!isMenuOpen"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-            <svg
-              v-else
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Bars3Icon v-if="!isMenuOpen" class="h-6 w-6" />
+            <XMarkIcon v-else class="h-6 w-6" />
           </button>
         </div>
       </div>
@@ -316,28 +207,7 @@
       <div class="px-2 pt-2 pb-3 space-y-1">
         <!-- Mobile Search -->
         <div class="relative px-2 mb-4">
-          <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <input
-            type="text"
-            v-model="searchQuery"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Search..."
-          />
+          <SearchBar placeholder="Search..." />
         </div>
 
         <!-- Mobile Menu Items -->
@@ -346,20 +216,7 @@
             @click="handleLogin"
             class="flex flex-col items-center p-2 rounded-md hover:bg-gray-100"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-gray-600"
-              :fill="user ? 'currentColor' : 'none'"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
+            <UserIcon class="h-6 w-6 text-gray-600" :class="{ 'fill-current': user }" />
             <span class="text-sm text-gray-600">Login</span>
           </button>
           <button
@@ -367,20 +224,10 @@
             class="flex flex-col items-center p-2 rounded-md hover:bg-gray-100 relative"
           >
             <div class="relative">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
+              <ShoppingCartIcon
                 class="h-6 w-6 text-gray-600"
-                :fill="cartStore.cartItems.length > 0 ? 'currentColor' : 'none'"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+                :class="{ 'fill-current': cartStore.cartItems.length > 0 }"
+              />
               <span
                 v-if="cartStore.cartItems.length > 0"
                 class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
@@ -424,18 +271,24 @@
 <script setup>
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import { storeToRefs } from 'pinia'
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
 import ConfirmationDialog from '@/components/modals/ConfirmationDialog.vue'
-import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useRouter } from 'vue-router'
 import UserRegistrationDialog from '@/components/authentication/UserRegistrationDialog.vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
 import UserLogin from '@/components/authentication/UserLoginDialog.vue'
+import SearchBar from '@/components/search/SearchBar.vue'
+import {
+  UserIcon,
+  ShoppingCartIcon,
+  TrashIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline'
 
 // Stores and Router
 const cartStore = useShoppingCartStore()
-const productsStore = useProductsStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -451,14 +304,12 @@ const isCartOpen = ref(false)
 const showUserMenu = ref(false)
 const showLogoutDialog = ref(false)
 const isLoggingOut = ref(false)
-const searchQuery = ref('')
-const showSearchResults = ref(false)
 const userMenuButton = ref(null)
 const cartButton = ref(null)
 const cartDropdown = ref(null)
+const imageLoaded = ref({})
 
 // Store refs
-const { searchResults, searchLoading } = storeToRefs(productsStore)
 const { user } = storeToRefs(authStore)
 
 // Computed
@@ -479,9 +330,7 @@ const handleCheckout = () => {
 
 const openEditModal = (item) => {
   selectedProduct.value = {
-    id: item.id,
-    name: item.name,
-    price: item.price,
+    ...item,
     quantity: cartStore.cartItems.find((i) => i.id === item.id)?.quantity || 0,
   }
   showEditModal.value = true
@@ -557,30 +406,6 @@ const handleClickOutside = (event) => {
   }
 }
 
-// Debounce function
-const debounce = (fn, delay) => {
-  let timeoutId
-  return (...args) => {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn(...args), delay)
-  }
-}
-
-// Debounced search
-const debouncedSearch = debounce((query) => {
-  productsStore.searchProducts(query)
-}, 300)
-
-// Watch search query
-watch(searchQuery, (newQuery) => {
-  if (newQuery.trim()) {
-    debouncedSearch(newQuery)
-    showSearchResults.value = true
-  } else {
-    showSearchResults.value = false
-  }
-})
-
 // Lifecycle hooks
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -601,6 +426,22 @@ const showAlert = (message, type = 'success', timeout = 3000) => {
 
 const closeCart = () => {
   isCartOpen.value = false
+}
+
+// Helper function to get image URL
+const getImageUrl = (product) => {
+  return product.product_image && product.product_image[0]
+    ? product.product_image[0].url
+    : '/placeholder.jpg'
+}
+
+// Image handling functions
+const handleImageLoad = (productId) => {
+  imageLoaded.value[productId] = true
+}
+
+const handleImageError = (productId) => {
+  imageLoaded.value[productId] = true
 }
 </script>
 

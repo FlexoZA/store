@@ -105,7 +105,7 @@ export const useProductsStore = defineStore('products', () => {
     try {
       const { data, error: supaError } = await supabase
         .from('products')
-        .select('id, name, price, product_image(*)')
+        .select('id, name, price, quantity, product_image(*)')
         .eq('status', true)
         .ilike('name', `%${query}%`)
         .limit(10) // Limit results to prevent performance issues

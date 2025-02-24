@@ -65,20 +65,10 @@
                 :disabled="product.quantity <= 0"
                 :title="product.quantity <= 0 ? 'Out of stock' : ''"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  :fill="isInCart(product.id) ? 'currentColor' : 'none'"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
+                <ShoppingCartIcon
+                  :class="{ 'fill-current': isInCart(product.id) }"
                   class="w-5 h-5"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                  />
-                </svg>
+                />
               </button>
 
               <!-- Wishlist Button -->
@@ -86,20 +76,7 @@
                 class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 cursor-pointer transition-all"
                 @click.prevent="toggleWishlist(product)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-5 h-5"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
-                  />
-                </svg>
+                <HeartIcon class="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -150,13 +127,7 @@
               :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
             >
               <span class="sr-only">Previous</span>
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path
-                  fill-rule="evenodd"
-                  d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                  clip-rule="evenodd"
-                />
-              </svg>
+              <ChevronLeftIcon class="h-5 w-5" />
             </button>
 
             <!-- Page Numbers -->
@@ -182,13 +153,7 @@
               :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
             >
               <span class="sr-only">Next</span>
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path
-                  fill-rule="evenodd"
-                  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                  clip-rule="evenodd"
-                />
-              </svg>
+              <ChevronRightIcon class="h-5 w-5" />
             </button>
           </nav>
         </div>
@@ -213,6 +178,12 @@ import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import ProductSkeleton from '@/components/loaders/productSkeleton.vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
+import {
+  ShoppingCartIcon,
+  HeartIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '@heroicons/vue/24/outline'
 
 // Store Initialization
 const store = useProductsStore()

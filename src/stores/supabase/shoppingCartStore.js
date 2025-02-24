@@ -26,6 +26,7 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
         name: product.name,
         price: product.price,
         quantity: product.quantity || 1,
+        product_image: product.product_image,
       })
     }
 
