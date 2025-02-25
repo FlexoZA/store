@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from './supabaseClient'
-import { logError } from '@/stores/supabase/utils/errorLogger'
+import { logError } from '@/utils/errorLogger'
 
 export const useFeaturedProductsStore = defineStore('featuredProducts', () => {
   const featured_products = ref([])

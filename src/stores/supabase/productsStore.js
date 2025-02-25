@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from './supabaseClient'
-import { isCacheValid } from './utils/cacheUtils'
-import { logError } from '@/stores/supabase/utils/errorLogger'
+import { isCacheValid } from '../../utils/cacheUtils'
+import { logError } from '@/utils/errorLogger'
 
 /**
  * Store for managing product data using Pinia
@@ -91,6 +91,7 @@ export const useProductsStore = defineStore('products', () => {
     }
   }
 
+  //TODO: Search needs to be in it's own store
   /**
    * Searches products by name
    * @param {string} query - Search query
