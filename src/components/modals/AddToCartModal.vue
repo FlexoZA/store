@@ -30,7 +30,9 @@
         <!-- Content -->
         <div class="sm:flex sm:items-start">
           <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-            <h3 class="text-base font-semibold leading-6 text-gray-900">{{ product.name }}</h3>
+            <h3 class="text-base font-semibold leading-6 text-gray-900">
+              {{ product.product_name }}
+            </h3>
 
             <hr class="my-4 border-gray-300" />
             <!-- Product Details -->

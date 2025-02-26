@@ -9,6 +9,29 @@
 
   <!-- Main Content -->
   <div v-else>
+    <!-- Category Filter -->
+    <div class="mb-6 flex justify-between items-center">
+      <h2 class="text-2xl font-semibold text-gray-900">Products</h2>
+      <div class="flex items-center">
+        <label for="category-filter" class="mr-2 text-sm font-medium text-gray-700"
+          >Filter by:</label
+        >
+        <div class="relative w-48">
+          <select
+            id="category-filter"
+            v-model="selectedCategoryId"
+            @change="handleCategoryChange"
+            class="block w-full rounded-md border-0 py-2 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          >
+            <option :value="null">All Categories</option>
+            <option v-for="category in categories" :key="category.id" :value="category.id">
+              {{ category.category_name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Products Grid -->
     <div
       class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
@@ -27,7 +50,7 @@
             <!-- Product Image -->
             <img
               :src="getImageUrl(product)"
-              :alt="product.name"
+              :alt="product.product_name"
               class="h-full w-full object-cover object-center transition-opacity duration-300"
               :class="{
                 'opacity-0':
@@ -47,7 +70,7 @@
           </div>
 
           <!-- Product Details -->
-          <h3 class="mt-4 text-sm text-gray-700">{{ product.name }}</h3>
+          <h3 class="mt-4 text-sm text-gray-700">{{ product.product_name }}</h3>
           <div class="mt-1 flex items-center justify-between">
             <p class="text-lg font-medium text-gray-900">R{{ product.price.toFixed(2) }}</p>
 
@@ -188,12 +211,28 @@ import {
 // Store Initialization
 const store = useProductsStore()
 const cartStore = useShoppingCartStore()
-const { products, loading, error, currentPage, totalPages } = storeToRefs(store)
+const { products, loading, error, currentPage, totalPages, categories, selectedCategory } =
+  storeToRefs(store)
 const { isInCart } = cartStore
 
 // Image Loading State Management
 const imageLoaded = ref({})
 const imageError = ref({})
+
+// Category filter handling
+const selectedCategoryId = ref(null)
+
+// Keep selectedCategoryId in sync with store
+watch(selectedCategory, (newCategory) => {
+  selectedCategoryId.value = newCategory
+})
+
+const handleCategoryChange = async () => {
+  // Reset to first page when changing category filter
+  window.scrollTo({ top: 0 })
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  await store.getProducts(1, selectedCategoryId.value)
+}
 
 const handleImageLoad = (productId) => {
   imageLoaded.value[productId] = true
@@ -219,7 +258,7 @@ const handlePageChange = async (newPage) => {
   if (newPage >= 1 && newPage <= totalPages.value) {
     window.scrollTo({ top: 0 })
     await new Promise((resolve) => setTimeout(resolve, 100))
-    await store.getProducts(newPage)
+    await store.getProducts(newPage, selectedCategoryId.value)
   }
 }
 
@@ -260,7 +299,13 @@ const getImageUrl = (product) => {
 
 // Lifecycle Hooks
 onMounted(async () => {
-  //store.clearProductsCache() // Clear cache first
+  // Clear cache to ensure we get fresh data with our fixed implementation
+  store.clearProductsCache()
+
+  // Fetch categories first
+  await store.getCategories()
+
+  // Then fetch products (without category filter initially)
   await store.getProducts()
 })
 </script>

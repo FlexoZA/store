@@ -31,7 +31,7 @@
           <div class="relative w-12 h-12">
             <img
               :src="getImageUrl(product)"
-              :alt="product.name"
+              :alt="product.product_name"
               class="w-12 h-12 object-cover rounded transition-opacity duration-300"
               :class="{
                 'opacity-0':
@@ -46,7 +46,7 @@
             ></div>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate">{{ product.name }}</div>
+            <div class="text-sm font-medium text-gray-900 truncate">{{ product.product_name }}</div>
             <div class="text-sm text-gray-500">R{{ product.price.toFixed(2) }}</div>
           </div>
           <button

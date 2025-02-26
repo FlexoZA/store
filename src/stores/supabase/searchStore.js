@@ -26,9 +26,9 @@ export const useSearchStore = defineStore('search', () => {
     try {
       const { data, error: supaError } = await supabase
         .from('products')
-        .select('id, name, price, quantity, product_image(*)')
-        .eq('status', true)
-        .ilike('name', `%${query}%`)
+        .select('id, product_name, price, quantity, product_image(*)')
+        .eq('enabled', true)
+        .ilike('product_name', `%${query}%`)
         .limit(10) // Limit results to prevent performance issues
 
       if (supaError) {
