@@ -79,7 +79,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useProductsStore } from '@/stores/supabase/productsStore'
+import { useSearchStore } from '@/stores/supabase/searchStore'
 import { useRouter } from 'vue-router'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline'
@@ -94,9 +94,9 @@ defineProps({
 })
 
 const router = useRouter()
-const productsStore = useProductsStore()
+const searchStore = useSearchStore()
 const cartStore = useShoppingCartStore()
-const { searchResults, searchLoading } = storeToRefs(productsStore)
+const { searchResults, searchLoading } = storeToRefs(searchStore)
 const { isInCart } = cartStore
 
 const searchQuery = ref('')
@@ -133,7 +133,7 @@ const debounce = (fn, delay) => {
 
 // Debounced search
 const debouncedSearch = debounce((query) => {
-  productsStore.searchProducts(query)
+  searchStore.searchProducts(query)
 }, 300)
 
 // Watch search query

@@ -5,6 +5,7 @@ import GeneralAlerts from '@/components/alerts/generalAlerts.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/authentication/authenticationStore'
 import AlertHandler from '@/components/alerts/AlertHandler.vue'
+import MainFooter from './components/navigation/MainFooter.vue'
 
 const alerts = ref(null)
 const authStore = useAuthStore()
@@ -37,6 +38,7 @@ onUnmounted(() => {
     <RouterView />
     <GeneralAlerts ref="alerts" />
     <AlertHandler />
+    <MainFooter />
   </div>
 </template>
 
