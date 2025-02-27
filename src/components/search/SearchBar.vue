@@ -9,7 +9,7 @@
       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
       :placeholder="placeholder"
       @focus="showSearchResults = true"
-      @blur="setTimeout(() => (showSearchResults = false), 200)"
+      @blur="handleSearchBlur"
     />
 
     <!-- Search Results Dropdown -->
@@ -105,6 +105,13 @@ const imageLoaded = ref({})
 const showAddToCartModal = ref(false)
 const selectedProduct = ref(null)
 const searchBarRef = ref(null)
+
+// Function to handle search blur
+const handleSearchBlur = () => {
+  window.setTimeout(() => {
+    showSearchResults.value = false
+  }, 200)
+}
 
 // Helper function to get image URL
 const getImageUrl = (product) => {

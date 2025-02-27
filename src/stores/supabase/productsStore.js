@@ -37,7 +37,6 @@ export const useProductsStore = defineStore('products', () => {
         throw supaError
       }
 
-      console.log('Categories fetched:', data)
       categories.value = data
     } catch (e) {
       error.value = e.message
@@ -56,8 +55,6 @@ export const useProductsStore = defineStore('products', () => {
   const getProducts = async (page = 1, categoryId = null) => {
     loading.value = true
     error.value = null
-
-    console.log('Fetching products with categoryId:', categoryId)
 
     // Update selected category
     selectedCategory.value = categoryId
@@ -85,18 +82,45 @@ export const useProductsStore = defineStore('products', () => {
       let query = supabase
         .from('products')
         .select(
-          `*,
-          product_image(*)`,
+          `id, product_name, description, price, quantity, sku, material_id,
+          category_id, is_bundled, is_featured, enabled, allow_no_stock_sale,
+          product_image(*),
+          product_features(*)`,
           { count: 'exact' },
         )
         .eq('enabled', true)
 
       // Add category filter if provided
       if (categoryId) {
-        // When filtering by category, exclude featured products
-        query = query.eq('category_id', categoryId).eq('featured', false)
+        // When filtering by category, include all products in that category
+        query = query.eq('category_id', categoryId)
       }
-      // If not filtering by category, show all products (including featured)
+
+      // If on page 1, make sure we include featured products
+      let featuredProductsData = []
+      if (page === 1) {
+        // First, get featured products regardless of pagination
+        const { data: featuredData, error: featuredError } = await supabase
+          .from('products')
+          .select(
+            `id, product_name, description, price, quantity, sku, material_id,
+            category_id, is_bundled, is_featured, enabled, allow_no_stock_sale,
+            product_image(*),
+            product_features(*)`,
+          )
+          .eq('enabled', true)
+          .eq('is_featured', true)
+          .limit(5) // Assuming there aren't many featured products
+
+        if (featuredError) {
+          await logError(featuredError, 'productsStore', {
+            component: 'getFeaturedProducts',
+          })
+        } else if (featuredData && featuredData.length > 0) {
+          // Save featured products for later
+          featuredProductsData = featuredData
+        }
+      }
 
       // Add pagination and ordering
       query = query.range(offset, offset + itemsPerPage - 1).order('id')
@@ -113,34 +137,40 @@ export const useProductsStore = defineStore('products', () => {
         throw supaError
       }
 
-      console.log('Product query results:', productData.length, 'products found')
+      // For page 1, ensure featured products are included (but avoid duplicates)
+      let combinedProductData = [...productData]
+      if (page === 1 && featuredProductsData.length > 0) {
+        // Get IDs of products already in the results
+        const existingIds = new Set(productData.map((p) => p.id))
 
-      // If no products found with this category, log more detailed info
+        // Add featured products that aren't already in the results
+        for (const featuredProduct of featuredProductsData) {
+          if (!existingIds.has(featuredProduct.id)) {
+            combinedProductData.push(featuredProduct)
+          }
+        }
+      }
+
+      // If no products found with this category, check if there are any products with this category
       if (productData.length === 0 && categoryId) {
-        console.log('No products found for category ID:', categoryId)
-
-        // Let's check if any product has this category at all
         const { data: checkData } = await supabase
           .from('products')
           .select('id, category_id')
           .eq('category_id', categoryId)
           .limit(1)
 
-        console.log('Product category check:', checkData)
-
-        // Let's also look at a sample product's data structure
-        const { data: sampleData } = await supabase.from('products').select('*').limit(1)
-
-        console.log('Sample product data structure:', sampleData)
+        if (!checkData || checkData.length === 0) {
+          error.value = 'No products found in this category'
+        }
       }
 
-      // Update store state
-      products.value = productData
+      // Update store state with combined data
+      products.value = combinedProductData
       currentPage.value = page
       totalPages.value = Math.ceil(count / itemsPerPage)
 
       // Updated cache storage with 'products.' prefix
-      localStorage.setItem(cacheKey, JSON.stringify(productData))
+      localStorage.setItem(cacheKey, JSON.stringify(combinedProductData))
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
       localStorage.setItem(`products.total_count${categoryPart}`, JSON.stringify(count))
       localStorage.setItem(`products.total_count${categoryPart}_timestamp`, Date.now().toString())

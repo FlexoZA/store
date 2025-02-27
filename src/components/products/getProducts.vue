@@ -1,6 +1,10 @@
 <template>
   <!-- Loading State -->
   <div class="mt-12" v-if="loading">
+    <!-- Featured Product Skeleton (only on page 1) -->
+    <FeaturedProductSkeleton v-if="currentPage === 1" class="mb-12" />
+
+    <!-- Regular Products Skeleton -->
     <ProductSkeleton />
   </div>
 
@@ -9,6 +13,88 @@
 
   <!-- Main Content -->
   <div v-else>
+    <!-- Featured Products (Only shown on page 1) -->
+    <div v-if="currentPage === 1 && featuredProducts.length > 0" class="mb-12">
+      <div
+        v-for="product in featuredProducts"
+        :key="'featured-' + product.id"
+        class="grid grid-cols-1 gap-8 md:grid-cols-2"
+      >
+        <!-- Image -->
+        <div class="aspect-square overflow-hidden rounded-lg">
+          <img
+            :src="
+              getImageUrl(product) !== '/placeholder.jpg' ? getImageUrl(product) : '/lister.png'
+            "
+            :alt="product.product_name"
+            class="h-full w-full object-cover"
+          />
+        </div>
+
+        <!-- Product Info -->
+        <div class="flex flex-col justify-between">
+          <div>
+            <!-- Title -->
+            <h3 class="text-2xl font-bold text-gray-900">{{ product.product_name }}</h3>
+            <!-- Description -->
+            <p class="mt-4 text-lg text-gray-500">
+              {{ product.description }}
+            </p>
+            <!-- Specifications -->
+            <ul class="mt-4 space-y-2 text-gray-600 list-disc pl-5">
+              <li v-for="(feature, index) in product.product_features" :key="index">
+                {{ feature.feature }}
+              </li>
+            </ul>
+
+            <!-- Action Buttons -->
+            <div class="mt-4">
+              <a
+                href="#"
+                class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
+              >
+                Read More
+              </a>
+              <a
+                href="#"
+                class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
+              >
+                Documentation
+              </a>
+              <a
+                href="#"
+                class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block"
+              >
+                3D View
+              </a>
+            </div>
+            <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
+            <p class="mt-6 text-l font-bold text-gray-900 text-right">
+              R{{ product.price ? product.price.toFixed(2) : '0.00' }}
+            </p>
+          </div>
+
+          <!-- Icons -->
+          <div class="mt-6 flex justify-end gap-4">
+            <button
+              class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+              @click.prevent="toggleWishlist(product)"
+            >
+              <HeartIcon class="h-6 w-6" />
+            </button>
+            <button
+              class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+              @click.prevent="product.quantity > 0 && openAddToCartModal(product)"
+              :disabled="product.quantity <= 0"
+            >
+              <ShoppingCartIcon class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+      </div>
+      <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
+    </div>
+
     <!-- Category Filter -->
     <div class="mb-6 flex justify-between items-center">
       <h2 class="text-2xl font-semibold text-gray-900">Products</h2>
@@ -37,7 +123,7 @@
       class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
     >
       <!-- Product Card -->
-      <div v-for="product in products" :key="product.id" class="group relative">
+      <div v-for="product in regularProducts" :key="product.id" class="group relative">
         <a href="#">
           <!-- Product Image Container with Relative Positioning -->
           <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
@@ -72,7 +158,9 @@
           <!-- Product Details -->
           <h3 class="mt-4 text-sm text-gray-700">{{ product.product_name }}</h3>
           <div class="mt-1 flex items-center justify-between">
-            <p class="text-lg font-medium text-gray-900">R{{ product.price.toFixed(2) }}</p>
+            <p class="text-lg font-medium text-gray-900">
+              R{{ product.price ? product.price.toFixed(2) : '0.00' }}
+            </p>
 
             <!-- Action Buttons (Cart & Wishlist) -->
             <div class="flex gap-2">
@@ -195,11 +283,12 @@
 
 <script setup>
 // Imports
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import ProductSkeleton from '@/components/loaders/productSkeleton.vue'
+import FeaturedProductSkeleton from '@/components/loaders/featuredProductSkeleton.vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
 import {
   ShoppingCartIcon,
@@ -214,6 +303,15 @@ const cartStore = useShoppingCartStore()
 const { products, loading, error, currentPage, totalPages, categories, selectedCategory } =
   storeToRefs(store)
 const { isInCart } = cartStore
+
+// Computed properties to separate featured from regular products
+const featuredProducts = computed(() => {
+  return products.value.filter((product) => product.is_featured === true)
+})
+
+const regularProducts = computed(() => {
+  return products.value.filter((product) => !product.is_featured)
+})
 
 // Image Loading State Management
 const imageLoaded = ref({})
@@ -285,7 +383,7 @@ const toggleWishlist = (product) => {
   console.log('Toggle wishlist for product:', product.id)
 }
 
-// Add this computed property
+// Image URL helper
 const getImageUrl = (product) => {
   if (
     !product?.product_image ||

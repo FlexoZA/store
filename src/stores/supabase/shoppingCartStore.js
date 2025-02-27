@@ -23,7 +23,8 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     } else {
       cartItems.value.push({
         id: product.id,
-        name: product.name,
+        name: product.product_name, // Store as name for backwards compatibility
+        product_name: product.product_name, // Also store as product_name
         price: product.price,
         quantity: product.quantity || 1,
         product_image: product.product_image,
@@ -34,7 +35,7 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     window.dispatchEvent(
       new CustomEvent('show-alert', {
         detail: {
-          message: `${product.name} added to cart`,
+          message: `${product.product_name} added to cart`,
           type: 'success',
         },
       }),
@@ -46,13 +47,14 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     const index = cartItems.value.findIndex((item) => item.id === productId)
     if (index > -1) {
       const item = cartItems.value[index]
+      const productName = item.product_name || item.name || 'Item' // Use either field or fallback
       cartItems.value.splice(index, 1)
 
       // Add alert for removal
       window.dispatchEvent(
         new CustomEvent('show-alert', {
           detail: {
-            message: `${item.name} removed from cart`,
+            message: `${productName} removed from cart`,
             type: 'error',
           },
         }),
@@ -69,10 +71,11 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
       } else {
         item.quantity = quantity
         // Add alert for update
+        const productName = item.product_name || item.name || 'Item' // Use either field or fallback
         window.dispatchEvent(
           new CustomEvent('show-alert', {
             detail: {
-              message: `${item.name} quantity updated`,
+              message: `${productName} quantity updated`,
               type: 'success',
             },
           }),
@@ -110,6 +113,25 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
   const getTotalItems = () => {
     return cartItems.value.reduce((total, item) => total + item.quantity, 0)
   }
+
+  // Migrate existing cart items to new schema if needed
+  const migrateCartItems = () => {
+    let migrationNeeded = false
+
+    cartItems.value.forEach((item) => {
+      if (!item.product_name && item.name) {
+        item.product_name = item.name
+        migrationNeeded = true
+      }
+    })
+
+    if (migrationNeeded) {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems.value))
+    }
+  }
+
+  // Run migration when store is initialized
+  migrateCartItems()
 
   return {
     cartItems,
