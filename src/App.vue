@@ -28,13 +28,6 @@ onUnmounted(() => {
 <template>
   <div class="bg-slate-100">
     <Navigation />
-    <!--
-  <nav>
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/about">About</RouterLink>
-  </nav>
--->
-
     <RouterView />
     <GeneralAlerts ref="alerts" />
     <AlertHandler />

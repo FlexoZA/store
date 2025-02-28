@@ -5,7 +5,11 @@
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
         <div class="flex-shrink-0 flex items-center">
-          <div class="flex-shrink-0 flex items-center">
+          <div
+            class="flex-shrink-0 flex items-center cursor-pointer"
+            @click="router.push('/')"
+            title="Go to Home"
+          >
             <img src="@/assets/lister-logo-black.svg" alt="Lister Logo" class="h-8 w-auto" />
           </div>
         </div>
@@ -253,7 +257,11 @@
     @cancel="cancelRemoveItem"
   />
 
-  <UserRegistrationDialog :show="showRegistrationDialog" @close="showRegistrationDialog = false" />
+  <UserRegistrationDialog
+    :show="showRegistrationDialog"
+    @close="showRegistrationDialog = false"
+    @open-login="openLoginFromRegistration"
+  />
 
   <ConfirmationDialog
     :show="showLogoutDialog"
@@ -265,7 +273,11 @@
     @cancel="showLogoutDialog = false"
   />
 
-  <UserLogin :is-open="showLoginDialog" @close="showLoginDialog = false" />
+  <UserLogin
+    :is-open="showLoginDialog"
+    @close="showLoginDialog = false"
+    @open-registration="openRegistrationFromLogin"
+  />
 </template>
 
 <script setup>
@@ -320,12 +332,23 @@ const handleLogin = () => {
   showRegistrationDialog.value = true
 }
 
+const openLoginFromRegistration = () => {
+  showRegistrationDialog.value = false
+  showLoginDialog.value = true
+}
+
+const openRegistrationFromLogin = () => {
+  showLoginDialog.value = false
+  showRegistrationDialog.value = true
+}
+
 const handleCart = () => {
   isCartOpen.value = !isCartOpen.value
 }
 
 const handleCheckout = () => {
-  console.log('Checkout clicked')
+  router.push('/checkout')
+  isCartOpen.value = false
 }
 
 const openEditModal = (item) => {
@@ -373,6 +396,11 @@ const confirmLogout = () => {
   closeUserMenu()
 }
 
+const navigateTo = (path) => {
+  router.push(path)
+  showUserMenu.value = false
+}
+
 const handleLogout = async () => {
   try {
     isLoggingOut.value = true
@@ -386,11 +414,6 @@ const handleLogout = async () => {
   } finally {
     isLoggingOut.value = false
   }
-}
-
-const navigateTo = (path) => {
-  router.push(path)
-  closeUserMenu()
 }
 
 const handleClickOutside = (event) => {

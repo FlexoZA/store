@@ -23,7 +23,8 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     } else {
       cartItems.value.push({
         id: product.id,
-        name: product.product_name, // Store as name for backwards compatibility
+        // TODO: Remove this once we have a new schema
+        //name: product.product_name, // Store as name for backwards compatibility
         product_name: product.product_name, // Also store as product_name
         price: product.price,
         quantity: product.quantity || 1,
@@ -47,7 +48,7 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     const index = cartItems.value.findIndex((item) => item.id === productId)
     if (index > -1) {
       const item = cartItems.value[index]
-      const productName = item.product_name || item.name || 'Item' // Use either field or fallback
+      const productName = item.product_name || item.name || 'Item' // Use either field or fallback TODO: Remove this once we have a new schema remove only item.name
       cartItems.value.splice(index, 1)
 
       // Add alert for removal
@@ -114,6 +115,7 @@ export const useShoppingCartStore = defineStore('shoppingCart', () => {
     return cartItems.value.reduce((total, item) => total + item.quantity, 0)
   }
 
+  // TODO: Check if this is needed
   // Migrate existing cart items to new schema if needed
   const migrateCartItems = () => {
     let migrationNeeded = false

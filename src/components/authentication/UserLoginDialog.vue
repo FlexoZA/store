@@ -115,6 +115,14 @@
               <span v-else>Login</span>
             </button>
           </div>
+
+          <!-- Registration link -->
+          <div class="text-right mt-4 text-sm text-gray-600">
+            Don't have an account?
+            <a @click="openRegistration" class="text-blue-500 hover:text-blue-700 cursor-pointer">
+              Sign up
+            </a>
+          </div>
         </form>
       </div>
     </div>
@@ -150,7 +158,7 @@ const emailError = computed(() => validateEmail(email.value))
 const passwordError = computed(() => validatePassword(password.value))
 
 // Define emits for parent component communication
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'open-registration'])
 
 // Close dialog handler
 const closeDialog = () => {
@@ -159,6 +167,12 @@ const closeDialog = () => {
   errorMessage.value = ''
   showPassword.value = false
   emit('close')
+}
+
+// Function to open registration dialog
+const openRegistration = () => {
+  closeDialog() // Close the login dialog first
+  emit('open-registration') // Emit event to open registration dialog
 }
 
 // Watch for dialog closing from parent

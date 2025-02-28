@@ -188,6 +188,14 @@
               <span v-else>Sign up</span>
             </button>
           </div>
+
+          <!-- Login link -->
+          <div class="text-right mt-4 text-sm text-gray-600">
+            Already have an account?
+            <a @click="openLogin" class="text-blue-500 hover:text-blue-700 cursor-pointer">
+              Log in
+            </a>
+          </div>
         </form>
       </div>
     </div>
@@ -215,7 +223,7 @@ const { show } = defineProps({
 })
 
 // Initialize required composables and refs
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'open-login'])
 const authStore = useAuthStore()
 const router = useRouter()
 const loading = ref(false)
@@ -351,5 +359,11 @@ const handleClose = () => {
   resetForm()
   showPassword.value = false
   emit('close')
+}
+
+// Function to open login dialog
+const openLogin = () => {
+  handleClose() // Close the registration dialog first
+  emit('open-login') // Emit event to open login dialog
 }
 </script>
