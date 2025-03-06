@@ -24,6 +24,15 @@ export const useProductsStore = defineStore('products', () => {
    */
   const getCategories = async () => {
     try {
+      const cacheKey = 'categories'
+      const cachedData = localStorage.getItem(cacheKey)
+
+      // Check if valid cached data exists
+      if (cachedData && isCacheValid(cacheKey)) {
+        categories.value = JSON.parse(cachedData)
+        return
+      }
+
       const { data, error: supaError } = await supabase
         .from('categories')
         .select('*')
@@ -38,6 +47,10 @@ export const useProductsStore = defineStore('products', () => {
       }
 
       categories.value = data
+
+      // Cache the categories data
+      localStorage.setItem(cacheKey, JSON.stringify(data))
+      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
     } catch (e) {
       error.value = e.message
       await logError(e, 'productsStore', {
@@ -192,7 +205,7 @@ export const useProductsStore = defineStore('products', () => {
   const clearProductsCache = () => {
     // Clear all product-related cache entries
     for (const key in localStorage) {
-      if (key.startsWith('products.')) {
+      if (key.startsWith('products.') || key === 'categories' || key === 'categories_timestamp') {
         localStorage.removeItem(key)
       }
     }

@@ -21,7 +21,7 @@
               <div>
                 <div class="flex justify-between text-base font-medium text-gray-900">
                   <h3>{{ item.product_name || item.name }}</h3>
-                  <p class="ml-4">{{ formatPrice(item.price * item.quantity) }}</p>
+                  <p class="ml-4">R {{ formatPrice(item.price * item.quantity) }}</p>
                 </div>
               </div>
 
@@ -45,7 +45,7 @@
         <div class="border-t border-gray-200 pt-4 mt-4">
           <div class="flex justify-between text-base font-medium text-gray-900">
             <p>Subtotal</p>
-            <p>{{ formatPrice(cartTotal) }}</p>
+            <p>R {{ formatPrice(cartTotal) }}</p>
           </div>
         </div>
       </div>

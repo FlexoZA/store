@@ -168,7 +168,7 @@
 
                     <!-- Product Details (Name, Quantity, Price) -->
                     <div class="flex-1">
-                      <h4 class="text-sm font-medium text-gray-800">{{ item.name }}</h4>
+                      <h4 class="text-sm font-medium text-gray-800">{{ item.product_name }}</h4>
                       <div class="flex justify-between items-center mt-1">
                         <span class="text-sm text-gray-600">Qty: {{ item.quantity }}</span>
                         <div class="flex items-center gap-2">

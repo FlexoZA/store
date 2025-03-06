@@ -353,10 +353,8 @@ const getImageUrl = (product) => {
   if (!product?.product_image?.[0]?.url) {
     return '/placeholder.jpg'
   }
-  // Add timestamp to prevent caching issues and fix double slashes
-  const timestamp = new Date().getTime()
-  const url = product.product_image[0].url.replace(/\/+/g, '/')
-  return `${url}?t=${timestamp}`
+  // Fix double slashes in URL
+  return product.product_image[0].url.replace(/\/+/g, '/')
 }
 
 // Lifecycle Hooks
@@ -366,6 +364,5 @@ onMounted(async () => {
 
   // Then fetch products (without category filter initially)
   await store.getProducts()
-  console.log(products)
 })
 </script>
