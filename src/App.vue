@@ -26,7 +26,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-slate-100">
+  <div class="bg-slate-100 min-h-screen">
     <Navigation />
     <RouterView />
     <GeneralAlerts ref="alerts" />

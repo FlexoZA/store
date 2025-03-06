@@ -116,14 +116,14 @@ For detailed database schema information, refer to [sql-schema.md](./sql-schema.
 
 This section tracks where key components are used throughout the application:
 
-| Component              | Location                                                 | Usage                                                          |
-| ---------------------- | -------------------------------------------------------- | -------------------------------------------------------------- |
-| MainNavigation         | src/components/navigation/MainNavigation.vue             | Used in App.vue as the main navigation bar across all pages    |
-| SearchBar              | src/components/search/SearchBar.vue                      | Used in MainNavigation for product search functionality        |
-| UserLogin              | src/components/authentication/UserLoginDialog.vue        | Used in MainNavigation for user authentication                 |
-| UserRegistrationDialog | src/components/authentication/UserRegistrationDialog.vue | Used in MainNavigation for new user registration               |
-| AddToCartModal         | src/components/modals/AddToCartModal.vue                 | Used in MainNavigation for editing cart items                  |
-| ConfirmationDialog     | src/components/modals/ConfirmationDialog.vue             | Used in MainNavigation for confirmations (logout, remove item) |
+| Component              | Location                                                 | Usage                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| MainNavigation         | src/components/navigation/MainNavigation.vue             | Used in App.vue as the main navigation bar across all pages. Features responsive design with desktop/mobile layouts, search functionality, user authentication interface (login/logout/registration), shopping cart dropdown with item management, and navigation links. Acts as the central UI control for core e-commerce functionality. |
+| SearchBar              | src/components/search/SearchBar.vue                      | Used in MainNavigation for product search functionality                                                                                                                                                                                                                                                                                    |
+| UserLogin              | src/components/authentication/UserLoginDialog.vue        | Used in MainNavigation for user authentication                                                                                                                                                                                                                                                                                             |
+| UserRegistrationDialog | src/components/authentication/UserRegistrationDialog.vue | Used in MainNavigation for new user registration                                                                                                                                                                                                                                                                                           |
+| AddToCartModal         | src/components/modals/AddToCartModal.vue                 | Used in MainNavigation for editing cart items                                                                                                                                                                                                                                                                                              |
+| ConfirmationDialog     | src/components/modals/ConfirmationDialog.vue             | Used in MainNavigation for confirmations (logout, remove item)                                                                                                                                                                                                                                                                             |
 
 ## 9. Utilities Usage
 
@@ -171,3 +171,25 @@ This section tracks how utility modules are used throughout the application:
 5. Maintain comments in code files
 6. Keep track of where each component is being used in roadmap
 7. If any ::TODO comments are found save in TODO.md
+
+### Image Loading Best Practices
+
+1. Use native browser lazy loading with the `loading="lazy"` attribute on images
+2. Keep image loading logic simple and avoid complex state management
+3. Use optional chaining for safe property access when handling image URLs
+4. Let the browser handle loading states and optimizations
+5. Avoid custom loading skeletons unless absolutely necessary
+6. Use appropriate image formats and sizes for different contexts
+7. Implement proper alt text for accessibility
+8. Use placeholder images for fallback cases
+
+Example implementation:
+
+```vue
+<img
+  :src="getImageUrl(product)"
+  :alt="product.product_name"
+  class="h-full w-full object-cover object-center"
+  loading="lazy"
+/>
+```

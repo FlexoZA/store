@@ -77,10 +77,12 @@ The component is structured as a responsive navigation bar with different layout
    - `showLogoutDialog` - Controls logout confirmation
    - `isLoggingOut` - Loading state for logout
    - `imageLoaded` - Tracks image loading status
+   - References to DOM elements (`userMenuButton`, `cartButton`, `cartDropdown`)
 
 2. **External State**
    - Shopping cart items and total (from cartStore)
    - User authentication state (from authStore)
+   - Computed property `cartHasItems` for enabling/disabling checkout
 
 ## Key Features
 
@@ -99,10 +101,12 @@ The component is structured as a responsive navigation bar with different layout
 3. **Shopping Cart Integration**
 
    - Cart icon with item count badge
-   - Dropdown cart preview
+   - Dropdown cart preview with scrollable content
+   - Individual item display with images, quantity, and price
    - Quick edit functionality for cart items
+   - Item removal with confirmation dialog
    - Cart total calculation
-   - Checkout button
+   - Checkout button with disabled state when cart is empty
 
 4. **Search Functionality**
 
@@ -111,7 +115,7 @@ The component is structured as a responsive navigation bar with different layout
 
 5. **Navigation**
    - Home link via logo
-   - Account navigation
+   - Account navigation (My Account, Favorites)
    - Checkout navigation
 
 ## Event Handling
@@ -135,24 +139,27 @@ The component is structured as a responsive navigation bar with different layout
 
 1. **Alert System**
 
-   - `showAlert` - Dispatches custom events for alert display
+   - `showAlert` - Dispatches custom events for alert display with configurable message, type, and timeout
 
 2. **Image Handling**
-   - `getImageUrl` - Resolves product images or fallbacks
-   - `handleImageLoad` - Manages image loading state
-   - `handleImageError` - Handles image loading errors
+   - `getImageUrl` - Resolves product images or fallbacks to placeholder
+   - `handleImageLoad` - Manages image loading state for smooth transitions
+   - `handleImageError` - Handles image loading errors with fallback display
 
 ## Usage
 
-The MainNavigation component is typically mounted at the application root level and appears on all pages, providing consistent navigation and access to core features like search, cart, and user authentication.
+The MainNavigation component is typically mounted at the application root level in App.vue and appears on all pages, providing consistent navigation and access to core features like search, cart, and user authentication.
 
 ## Styling
 
 The component uses Tailwind CSS for styling with:
 
 - Responsive layouts
-- Transitions and animations
-- Custom styles for disabled states
+- Transitions and animations for dropdowns (duration-800, ease-in-out)
+- Hover effects for interactive elements
+- Loading state animations for images (animate-pulse)
+- Custom styles for disabled checkout button
+- Sticky positioning (sticky top-0 z-50)
 
 ## Related Components
 

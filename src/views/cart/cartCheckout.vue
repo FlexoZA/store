@@ -11,7 +11,7 @@
           <li v-for="item in cartItems" :key="item.id" class="py-4 flex">
             <div class="flex-shrink-0 w-16 h-16 overflow-hidden rounded-md border border-gray-200">
               <img
-                :src="item.product_image || '/placeholder.jpg'"
+                :src="getImageUrl(item)"
                 :alt="item.product_name"
                 class="h-full w-full object-cover object-center"
               />
@@ -32,9 +32,9 @@
                   <button
                     @click="showRemoveConfirmation(item)"
                     type="button"
-                    class="font-medium text-red-600 hover:text-red-500"
+                    class="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100"
                   >
-                    Remove
+                    <TrashIcon class="h-5 w-5" />
                   </button>
                 </div>
               </div>
@@ -99,6 +99,7 @@
 import { computed, ref } from 'vue'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import ConfirmationDialog from '@/components/modals/ConfirmationDialog.vue'
+import { TrashIcon } from '@heroicons/vue/24/outline'
 
 // Initialize store
 const cartStore = useShoppingCartStore()
@@ -119,6 +120,11 @@ const formatPrice = (price) => {
     style: 'currency',
     currency: 'ZAR',
   }).format(price)
+}
+
+// Helper function to get image URL with fallback
+const getImageUrl = (product) => {
+  return product?.product_image?.[0]?.url || '/placeholder.jpg'
 }
 
 // Show confirmation dialog before removing item

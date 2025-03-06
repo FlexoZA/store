@@ -3,7 +3,6 @@
   <div class="mt-12" v-if="loading">
     <!-- Featured Product Skeleton (only on page 1) -->
     <FeaturedProductSkeleton v-if="currentPage === 1" class="mb-12" />
-
     <!-- Regular Products Skeleton -->
     <ProductSkeleton />
   </div>
@@ -13,8 +12,11 @@
 
   <!-- Main Content -->
   <div v-else>
-    <!-- Featured Products (Only shown on page 1) -->
-    <div v-if="currentPage === 1 && featuredProducts.length > 0" class="mb-12">
+    <!-- Featured Products (Only shown on page 1 and when no category is selected) -->
+    <div
+      v-if="currentPage === 1 && featuredProducts.length > 0 && !selectedCategoryId"
+      class="mb-12"
+    >
       <div
         v-for="product in featuredProducts"
         :key="'featured-' + product.id"
@@ -23,11 +25,8 @@
         <!-- Image -->
         <div class="aspect-square overflow-hidden rounded-lg">
           <img
-            :src="
-              getImageUrl(product) !== '/placeholder.jpg' ? getImageUrl(product) : '/lister.png'
-            "
-            :alt="product.product_name"
-            class="h-full w-full object-cover"
+            :src="getImageUrl(product)"
+            class="h-full w-full object-cover transition-opacity duration-500 ease-in-out opacity-0 animate-fade-in"
           />
         </div>
 
@@ -97,7 +96,9 @@
 
     <!-- Category Filter -->
     <div class="mb-6 flex justify-between items-center">
-      <h2 class="text-2xl font-semibold text-gray-900">Products</h2>
+      <div>
+        <h2 class="text-2xl font-semibold text-gray-900">Products</h2>
+      </div>
       <div class="flex items-center">
         <label for="category-filter" class="mr-2 text-sm font-medium text-gray-700"
           >Filter by:</label
@@ -127,23 +128,11 @@
         <a href="#">
           <!-- Product Image Container with Relative Positioning -->
           <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-            <!-- Loading Skeleton -->
-            <div
-              v-if="!imageLoaded[product.id] && getImageUrl(product) !== '/placeholder.jpg'"
-              class="absolute inset-0 animate-pulse bg-gray-200"
-            ></div>
-
             <!-- Product Image -->
             <img
               :src="getImageUrl(product)"
-              :alt="product.product_name"
-              class="h-full w-full object-cover object-center transition-opacity duration-300"
-              :class="{
-                'opacity-0':
-                  !imageLoaded[product.id] && getImageUrl(product) !== '/placeholder.jpg',
-              }"
-              @load="handleImageLoad(product.id)"
-              @error="handleImageError(product.id)"
+              class="h-full w-full object-cover object-center transition-opacity duration-500 ease-in-out opacity-0 animate-fade-in"
+              loading="lazy"
             />
 
             <!-- Out of Stock Banner -->
@@ -313,10 +302,6 @@ const regularProducts = computed(() => {
   return products.value.filter((product) => !product.is_featured)
 })
 
-// Image Loading State Management
-const imageLoaded = ref({})
-const imageError = ref({})
-
 // Category filter handling
 const selectedCategoryId = ref(null)
 
@@ -331,25 +316,6 @@ const handleCategoryChange = async () => {
   await new Promise((resolve) => setTimeout(resolve, 100))
   await store.getProducts(1, selectedCategoryId.value)
 }
-
-const handleImageLoad = (productId) => {
-  imageLoaded.value[productId] = true
-}
-
-const handleImageError = (productId) => {
-  imageLoaded.value[productId] = true
-  imageError.value[productId] = true
-}
-
-// Reset image states when products change
-watch(
-  products,
-  () => {
-    imageLoaded.value = {}
-    imageError.value = {}
-  },
-  { deep: true },
-)
 
 // Page Navigation Handler
 const handlePageChange = async (newPage) => {
@@ -383,27 +349,24 @@ const toggleWishlist = (product) => {
   console.log('Toggle wishlist for product:', product.id)
 }
 
-// Image URL helper
+// Simplify image URL helper
 const getImageUrl = (product) => {
-  if (
-    !product?.product_image ||
-    !Array.isArray(product.product_image) ||
-    product.product_image.length === 0
-  ) {
+  if (!product?.product_image?.[0]?.url) {
     return '/placeholder.jpg'
   }
-  return product.product_image[0].url || '/placeholder.jpg'
+  // Add timestamp to prevent caching issues and fix double slashes
+  const timestamp = new Date().getTime()
+  const url = product.product_image[0].url.replace(/\/+/g, '/')
+  return `${url}?t=${timestamp}`
 }
 
 // Lifecycle Hooks
 onMounted(async () => {
-  // Clear cache to ensure we get fresh data with our fixed implementation
-  store.clearProductsCache()
-
   // Fetch categories first
   await store.getCategories()
 
   // Then fetch products (without category filter initially)
   await store.getProducts()
+  console.log(products)
 })
 </script>
