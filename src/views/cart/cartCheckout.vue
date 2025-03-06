@@ -100,6 +100,7 @@ import { computed, ref } from 'vue'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import ConfirmationDialog from '@/components/modals/ConfirmationDialog.vue'
 import { TrashIcon } from '@heroicons/vue/24/outline'
+import { formatPrice } from '@/utils/priceUtils'
 
 // Initialize store
 const cartStore = useShoppingCartStore()
@@ -113,14 +114,6 @@ const showDialog = ref(false)
 const dialogMessage = ref('')
 const dialogLoading = ref(false)
 const itemToRemove = ref(null)
-
-// Format price to currency
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('en-ZA', {
-    style: 'currency',
-    currency: 'ZAR',
-  }).format(price)
-}
 
 // Helper function to get image URL with fallback
 const getImageUrl = (product) => {

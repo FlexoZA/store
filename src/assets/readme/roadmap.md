@@ -41,7 +41,8 @@ store/
 │   │   └── authentication/# Authentication state management
 │   │
 │   ├── utils/             # Utility functions
-│   │   └── cacheUtils.js  # Cache validation utilities
+│   │   ├── cacheUtils.js  # Cache validation utilities
+│   │   └── priceUtils.js  # Price formatting utilities
 │   │
 │   ├── router/            # Vue Router configuration
 │   ├── App.vue            # Root component
@@ -96,6 +97,7 @@ Each file in the project has an associated readme file in `/src/assets/readme/` 
 | [get-products-vue-component.md](./get-products-vue-component.md) | Product component documentation            | Product-related components                   |
 | [main-navigation.md](./main-navigation.md)                       | Main navigation bar documentation          | src/components/navigation/MainNavigation.vue |
 | [cache-utils.md](./cache-utils.md)                               | Cache utility documentation                | src/utils/cacheUtils.js                      |
+| [price-utils.md](./price-utils.md)                               | Price formatting utility documentation     | src/utils/priceUtils.js                      |
 | [readme.md](./readme.md)                                         | Instructions for maintaining documentation | General reference                            |
 | [roadmap.md](./roadmap.md)                                       | This roadmap file                          | Project overview                             |
 | [TODO.md](./TODO.md)                                             | List of pending tasks from ::TODO comments | Collected from all source files              |
@@ -132,6 +134,7 @@ This section tracks how utility modules are used throughout the application:
 | Utility    | Location                | Usage                                                                                                         |
 | ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
 | cacheUtils | src/utils/cacheUtils.js | Used in store modules (especially productsStore.js) to validate cached data and prevent unnecessary API calls |
+| priceUtils | src/utils/priceUtils.js | Used in product components to format prices in South African currency format (e.g., "R34 000,00")             |
 
 ## 10. Dependencies
 

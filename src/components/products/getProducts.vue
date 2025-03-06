@@ -69,7 +69,7 @@
             </div>
             <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
             <p class="mt-6 text-l font-bold text-gray-900 text-right">
-              R{{ product.price ? product.price.toFixed(2) : '0.00' }}
+              R{{ formatPrice(product.price) }}
             </p>
           </div>
 
@@ -147,9 +147,7 @@
           <!-- Product Details -->
           <h3 class="mt-4 text-sm text-gray-700">{{ product.product_name }}</h3>
           <div class="mt-1 flex items-center justify-between">
-            <p class="text-lg font-medium text-gray-900">
-              R{{ product.price ? product.price.toFixed(2) : '0.00' }}
-            </p>
+            <p class="text-lg font-medium text-gray-900">R{{ formatPrice(product.price) }}</p>
 
             <!-- Action Buttons (Cart & Wishlist) -->
             <div class="flex gap-2">
@@ -279,6 +277,7 @@ import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
 import ProductSkeleton from '@/components/loaders/productSkeleton.vue'
 import FeaturedProductSkeleton from '@/components/loaders/featuredProductSkeleton.vue'
 import AddToCartModal from '@/components/modals/AddToCartModal.vue'
+import { formatPrice } from '@/utils/priceUtils'
 import {
   ShoppingCartIcon,
   HeartIcon,

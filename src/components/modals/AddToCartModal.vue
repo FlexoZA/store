@@ -37,7 +37,7 @@
             <hr class="my-4 border-gray-300" />
             <!-- Product Details -->
             <div class="mt-4">
-              <p class="mt-2 text-sm text-gray-500">Price: R{{ product.price.toFixed(2) }}</p>
+              <p class="mt-2 text-sm text-gray-500">Price: R{{ formatPrice(product.price) }}</p>
               <p class="mt-1 text-sm text-gray-500">Available: {{ product.quantity }} units</p>
 
               <!-- Current Cart Info -->
@@ -107,6 +107,7 @@
 <script setup>
 import { ref, defineProps, defineEmits, computed, watch } from 'vue'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
+import { formatPrice } from '@/utils/priceUtils'
 
 const props = defineProps({
   show: Boolean,

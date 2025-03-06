@@ -173,7 +173,7 @@
                         <span class="text-sm text-gray-600">Qty: {{ item.quantity }}</span>
                         <div class="flex items-center gap-2">
                           <span class="text-sm font-medium text-gray-800"
-                            >R{{ (item.price * item.quantity).toFixed(2) }}</span
+                            >R{{ formatPrice(item.price * item.quantity) }}</span
                           >
                           <!-- Remove Item Button -->
                           <button
@@ -194,7 +194,7 @@
                 <div class="flex justify-between items-center mb-4">
                   <span class="text-sm font-medium text-gray-600">Total</span>
                   <span class="text-lg font-semibold text-gray-800"
-                    >R{{ cartStore.getCartTotal().toFixed(2) }}</span
+                    >R{{ formatPrice(cartStore.getCartTotal()) }}</span
                   >
                 </div>
 
@@ -339,6 +339,9 @@ import {
   Bars3Icon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+
+// Utility imports
+import { formatPrice } from '@/utils/priceUtils'
 
 // ------------------------------------------------------------
 // Store and Router Initialization
