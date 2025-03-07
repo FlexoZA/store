@@ -27,15 +27,31 @@ export const useProductsStore = defineStore('products', () => {
       const cacheKey = 'categories'
       const cachedData = localStorage.getItem(cacheKey)
 
-      // Check if valid cached data exists
+      // Check if valid cached data exists and properly parse it
       if (cachedData && isCacheValid(cacheKey)) {
-        categories.value = JSON.parse(cachedData)
-        return
+        try {
+          const parsedData = JSON.parse(cachedData)
+          // Ensure the cached data has all required properties
+          if (
+            parsedData &&
+            Array.isArray(parsedData) &&
+            parsedData.every(
+              (category) =>
+                category.id && category.category_name && typeof category.enabled === 'boolean',
+            )
+          ) {
+            categories.value = parsedData
+            return
+          }
+        } catch (e) {
+          console.warn('Categories cache parse error:', e)
+          // If there's any error parsing the cache, we'll fetch fresh data
+        }
       }
 
       const { data, error: supaError } = await supabase
         .from('categories')
-        .select('*')
+        .select('id, category_name, enabled, category_description')
         .eq('enabled', true)
         .order('category_name')
 
@@ -46,11 +62,12 @@ export const useProductsStore = defineStore('products', () => {
         throw supaError
       }
 
-      categories.value = data
-
-      // Cache the categories data
-      localStorage.setItem(cacheKey, JSON.stringify(data))
-      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
+      // Ensure we have valid data before caching
+      if (data && Array.isArray(data)) {
+        categories.value = data
+        localStorage.setItem(cacheKey, JSON.stringify(data))
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
+      }
     } catch (e) {
       error.value = e.message
       await logError(e, 'productsStore', {
@@ -78,27 +95,73 @@ export const useProductsStore = defineStore('products', () => {
     const cachedData = localStorage.getItem(cacheKey)
     const cachedCount = localStorage.getItem(`products.total_count${categoryPart}`)
 
-    // Check if valid cached data exists
+    // Check if valid cached data exists and properly parse it
     if (cachedData && cachedCount && isCacheValid(cacheKey)) {
-      products.value = JSON.parse(cachedData)
-      currentPage.value = page
-      totalPages.value = Math.ceil(JSON.parse(cachedCount) / itemsPerPage)
-      loading.value = false
-      return
+      try {
+        const parsedData = JSON.parse(cachedData)
+        // Ensure the cached data has all required properties and relationships
+        if (
+          parsedData &&
+          Array.isArray(parsedData) &&
+          parsedData.length > 0 &&
+          parsedData.every(
+            (product) =>
+              product.id &&
+              product.product_name &&
+              Array.isArray(product.product_image) &&
+              Array.isArray(product.product_features) &&
+              // Validate that we have at least empty arrays for relationships
+              typeof product.product_image !== 'undefined' &&
+              typeof product.product_features !== 'undefined',
+          )
+        ) {
+          products.value = parsedData
+          currentPage.value = page
+          totalPages.value = Math.ceil(JSON.parse(cachedCount) / itemsPerPage)
+          loading.value = false
+          return
+        } else {
+          console.warn('Invalid cached data structure, fetching fresh data')
+        }
+      } catch (e) {
+        console.warn('Cache parse error:', e)
+        // If there's any error parsing the cache, we'll fetch fresh data
+      }
     }
 
     try {
       // Calculate offset for pagination
       const offset = (page - 1) * itemsPerPage
 
-      // Start building the query
+      // Start building the query with explicit field selection
       let query = supabase
         .from('products')
         .select(
-          `id, product_name, description, price, quantity, sku, material_id,
-          category_id, is_bundled, is_featured, enabled, allow_no_stock_sale,
-          product_image(*),
-          product_features(*)`,
+          `
+          id,
+          product_name,
+          description,
+          price,
+          quantity,
+          sku,
+          material_id,
+          category_id,
+          is_bundled,
+          is_featured,
+          enabled,
+          allow_no_stock_sale,
+          product_image (
+            id,
+            product_id,
+            url,
+            name
+          ),
+          product_features (
+            id,
+            product_id,
+            feature
+          )
+        `,
           { count: 'exact' },
         )
         .eq('enabled', true)
@@ -116,10 +179,31 @@ export const useProductsStore = defineStore('products', () => {
         const { data: featuredData, error: featuredError } = await supabase
           .from('products')
           .select(
-            `id, product_name, description, price, quantity, sku, material_id,
-            category_id, is_bundled, is_featured, enabled, allow_no_stock_sale,
-            product_image(*),
-            product_features(*)`,
+            `
+            id,
+            product_name,
+            description,
+            price,
+            quantity,
+            sku,
+            material_id,
+            category_id,
+            is_bundled,
+            is_featured,
+            enabled,
+            allow_no_stock_sale,
+            product_image (
+              id,
+              product_id,
+              url,
+              name
+            ),
+            product_features (
+              id,
+              product_id,
+              feature
+            )
+            `,
           )
           .eq('enabled', true)
           .eq('is_featured', true)
@@ -182,8 +266,19 @@ export const useProductsStore = defineStore('products', () => {
       currentPage.value = page
       totalPages.value = Math.ceil(count / itemsPerPage)
 
+      // Cache the data with proper validation of relationships
+      const dataToCache = combinedProductData.map((product) => {
+        // Ensure product has valid structure before caching
+        return {
+          ...product,
+          // Always ensure these are arrays, even if empty
+          product_image: Array.isArray(product.product_image) ? product.product_image : [],
+          product_features: Array.isArray(product.product_features) ? product.product_features : [],
+        }
+      })
+
       // Updated cache storage with 'products.' prefix
-      localStorage.setItem(cacheKey, JSON.stringify(combinedProductData))
+      localStorage.setItem(cacheKey, JSON.stringify(dataToCache))
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
       localStorage.setItem(`products.total_count${categoryPart}`, JSON.stringify(count))
       localStorage.setItem(`products.total_count${categoryPart}_timestamp`, Date.now().toString())
@@ -205,11 +300,83 @@ export const useProductsStore = defineStore('products', () => {
   const clearProductsCache = () => {
     // Clear all product-related cache entries
     for (const key in localStorage) {
-      if (key.startsWith('products.') || key === 'categories' || key === 'categories_timestamp') {
+      if (
+        key.startsWith('products.') ||
+        key === 'categories' ||
+        key === 'categories_timestamp' ||
+        key === 'featured_products' ||
+        key === 'featured_products_timestamp'
+      ) {
+        console.log(`Clearing cache for: ${key}`)
         localStorage.removeItem(key)
       }
     }
+
+    // Force reset state
+    products.value = []
+    categories.value = []
   }
+
+  /**
+   * Validates the cache integrity on app startup
+   * Clears corrupted cache to ensure fresh data is loaded
+   */
+  const validateCache = () => {
+    try {
+      // Check categories cache
+      const categoriesCache = localStorage.getItem('categories')
+      if (categoriesCache) {
+        try {
+          const parsed = JSON.parse(categoriesCache)
+          if (!Array.isArray(parsed) || !parsed.every((c) => c.id && c.category_name)) {
+            console.warn('Corrupted categories cache found, clearing')
+            localStorage.removeItem('categories')
+            localStorage.removeItem('categories_timestamp')
+          }
+        } catch (e) {
+          console.warn('Invalid categories cache, clearing:', e.message)
+          localStorage.removeItem('categories')
+          localStorage.removeItem('categories_timestamp')
+        }
+      }
+
+      // Check product caches
+      for (const key in localStorage) {
+        if (key.startsWith('products.') && !key.includes('_timestamp')) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(key))
+
+            // Validate cache structure
+            if (
+              !Array.isArray(parsed) ||
+              parsed.some(
+                (p) =>
+                  !p.id ||
+                  !p.product_name ||
+                  !Array.isArray(p.product_image) ||
+                  !Array.isArray(p.product_features),
+              )
+            ) {
+              console.warn(`Corrupted products cache found for ${key}, clearing`)
+              localStorage.removeItem(key)
+              localStorage.removeItem(`${key}_timestamp`)
+            }
+          } catch (e) {
+            console.warn(`Invalid products cache for ${key}, clearing: ${e.message}`)
+            localStorage.removeItem(key)
+            localStorage.removeItem(`${key}_timestamp`)
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error validating cache:', e.message)
+      // If something goes really wrong, clear all cache
+      clearProductsCache()
+    }
+  }
+
+  // Call validateCache immediately to ensure cache integrity
+  validateCache()
 
   // Expose store properties and methods
   return {
@@ -223,5 +390,6 @@ export const useProductsStore = defineStore('products', () => {
     getProducts,
     getCategories,
     clearProductsCache,
+    validateCache, // Expose the validate function
   }
 })
