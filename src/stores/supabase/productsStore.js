@@ -11,6 +11,7 @@ import { logError } from '@/utils/errorLogger'
 export const useProductsStore = defineStore('products', () => {
   // State management using refs
   const products = ref([]) // Stores the current page of products
+  const featuredProducts = ref([]) // Stores featured products
   const loading = ref(false) // Loading state indicator
   const error = ref(null) // Error state management
   const currentPage = ref(1) // Current page number
@@ -94,6 +95,19 @@ export const useProductsStore = defineStore('products', () => {
     const cacheKey = `products.page_${page}${categoryPart}`
     const cachedData = localStorage.getItem(cacheKey)
     const cachedCount = localStorage.getItem(`products.total_count${categoryPart}`)
+    const cachedFeatured = localStorage.getItem('products.featured')
+
+    // Check if valid cached data exists for featured products
+    if (cachedFeatured && isCacheValid('products.featured')) {
+      try {
+        const parsedFeatured = JSON.parse(cachedFeatured)
+        if (parsedFeatured && Array.isArray(parsedFeatured)) {
+          featuredProducts.value = parsedFeatured
+        }
+      } catch (e) {
+        console.warn('Featured products cache parse error:', e)
+      }
+    }
 
     // Check if valid cached data exists and properly parse it
     if (cachedData && cachedCount && isCacheValid(cacheKey)) {
@@ -118,6 +132,12 @@ export const useProductsStore = defineStore('products', () => {
           products.value = parsedData
           currentPage.value = page
           totalPages.value = Math.ceil(JSON.parse(cachedCount) / itemsPerPage)
+
+          // If we're on page 1 and don't have featured products yet, fetch them
+          if (page === 1 && featuredProducts.value.length === 0) {
+            await getFeaturedProducts(categoryId)
+          }
+
           loading.value = false
           return
         } else {
@@ -130,6 +150,11 @@ export const useProductsStore = defineStore('products', () => {
     }
 
     try {
+      // If we're on page 1 or don't have featured products yet, fetch them
+      if (page === 1 || featuredProducts.value.length === 0) {
+        await getFeaturedProducts(categoryId)
+      }
+
       // Calculate offset for pagination
       const offset = (page - 1) * itemsPerPage
 
@@ -172,53 +197,6 @@ export const useProductsStore = defineStore('products', () => {
         query = query.eq('category_id', categoryId)
       }
 
-      // If on page 1, make sure we include featured products
-      let featuredProductsData = []
-      if (page === 1) {
-        // First, get featured products regardless of pagination
-        const { data: featuredData, error: featuredError } = await supabase
-          .from('products')
-          .select(
-            `
-            id,
-            product_name,
-            description,
-            price,
-            quantity,
-            sku,
-            material_id,
-            category_id,
-            is_bundled,
-            is_featured,
-            enabled,
-            allow_no_stock_sale,
-            product_image (
-              id,
-              product_id,
-              url,
-              name
-            ),
-            product_features (
-              id,
-              product_id,
-              feature
-            )
-            `,
-          )
-          .eq('enabled', true)
-          .eq('is_featured', true)
-          .limit(5) // Assuming there aren't many featured products
-
-        if (featuredError) {
-          await logError(featuredError, 'productsStore', {
-            component: 'getFeaturedProducts',
-          })
-        } else if (featuredData && featuredData.length > 0) {
-          // Save featured products for later
-          featuredProductsData = featuredData
-        }
-      }
-
       // Add pagination and ordering
       query = query.range(offset, offset + itemsPerPage - 1).order('id')
 
@@ -232,20 +210,6 @@ export const useProductsStore = defineStore('products', () => {
           component: 'productsStore',
         })
         throw supaError
-      }
-
-      // For page 1, ensure featured products are included (but avoid duplicates)
-      let combinedProductData = [...productData]
-      if (page === 1 && featuredProductsData.length > 0) {
-        // Get IDs of products already in the results
-        const existingIds = new Set(productData.map((p) => p.id))
-
-        // Add featured products that aren't already in the results
-        for (const featuredProduct of featuredProductsData) {
-          if (!existingIds.has(featuredProduct.id)) {
-            combinedProductData.push(featuredProduct)
-          }
-        }
       }
 
       // If no products found with this category, check if there are any products with this category
@@ -262,12 +226,12 @@ export const useProductsStore = defineStore('products', () => {
       }
 
       // Update store state with combined data
-      products.value = combinedProductData
+      products.value = productData
       currentPage.value = page
       totalPages.value = Math.ceil(count / itemsPerPage)
 
       // Cache the data with proper validation of relationships
-      const dataToCache = combinedProductData.map((product) => {
+      const dataToCache = productData.map((product) => {
         // Ensure product has valid structure before caching
         return {
           ...product,
@@ -295,18 +259,96 @@ export const useProductsStore = defineStore('products', () => {
   }
 
   /**
+   * Fetches featured products from Supabase
+   * @param {number|null} categoryId - Optional category ID to filter by
+   */
+  const getFeaturedProducts = async (categoryId = null) => {
+    try {
+      const cacheKey = 'products.featured'
+      const cachedData = localStorage.getItem(cacheKey)
+
+      // Check if valid cached data exists
+      if (cachedData && isCacheValid(cacheKey)) {
+        try {
+          const parsedData = JSON.parse(cachedData)
+          if (parsedData && Array.isArray(parsedData)) {
+            featuredProducts.value = parsedData
+            return
+          }
+        } catch (e) {
+          console.warn('Featured products cache parse error:', e)
+        }
+      }
+
+      // Build query for featured products
+      let query = supabase
+        .from('products')
+        .select(
+          `
+          id,
+          product_name,
+          description,
+          price,
+          quantity,
+          sku,
+          material_id,
+          category_id,
+          is_bundled,
+          is_featured,
+          enabled,
+          allow_no_stock_sale,
+          product_image (
+            id,
+            product_id,
+            url,
+            name
+          ),
+          product_features (
+            id,
+            product_id,
+            feature
+          )
+        `,
+        )
+        .eq('enabled', true)
+        .eq('is_featured', true)
+        .order('id')
+
+      // Add category filter if provided
+      if (categoryId) {
+        query = query.eq('category_id', categoryId)
+      }
+
+      const { data: featuredData, error: featuredError } = await query
+
+      if (featuredError) {
+        await logError(featuredError, 'productsStore', {
+          component: 'getFeaturedProducts',
+        })
+        throw featuredError
+      }
+
+      // Update featured products state
+      featuredProducts.value = featuredData || []
+
+      // Cache the featured products
+      localStorage.setItem(cacheKey, JSON.stringify(featuredData))
+      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
+    } catch (e) {
+      console.error('Error fetching featured products:', e)
+      await logError(e, 'productsStore', {
+        component: 'getFeaturedProducts',
+      })
+    }
+  }
+
+  /**
    * Clear products cache when schema or data changes
    */
   const clearProductsCache = () => {
     // Clear all product-related cache entries
     for (const key in localStorage) {
-      if (
-        key.startsWith('products.') ||
-        key === 'categories' ||
-        key === 'categories_timestamp' ||
-        key === 'featured_products' ||
-        key === 'featured_products_timestamp'
-      ) {
+      if (key.startsWith('products.') || key === 'categories' || key === 'categories_timestamp') {
         console.log(`Clearing cache for: ${key}`)
         localStorage.removeItem(key)
       }
@@ -314,6 +356,7 @@ export const useProductsStore = defineStore('products', () => {
 
     // Force reset state
     products.value = []
+    featuredProducts.value = []
     categories.value = []
   }
 
@@ -381,6 +424,7 @@ export const useProductsStore = defineStore('products', () => {
   // Expose store properties and methods
   return {
     products,
+    featuredProducts,
     loading,
     error,
     currentPage,
@@ -388,6 +432,7 @@ export const useProductsStore = defineStore('products', () => {
     categories,
     selectedCategory,
     getProducts,
+    getFeaturedProducts,
     getCategories,
     clearProductsCache,
     validateCache, // Expose the validate function

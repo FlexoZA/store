@@ -17,79 +17,94 @@
       v-if="currentPage === 1 && featuredProducts.length > 0 && !selectedCategoryId"
       class="mb-12"
     >
+      <h2 class="text-2xl font-semibold text-gray-900 mb-6">Featured Products</h2>
       <div
-        v-for="product in featuredProducts"
+        v-for="(product, index) in featuredProducts"
         :key="'featured-' + product.id"
-        class="grid grid-cols-1 gap-8 md:grid-cols-2"
+        class="mb-8"
       >
-        <!-- Image -->
-        <div class="aspect-square overflow-hidden rounded-lg">
-          <img
-            :src="getImageUrl(product)"
-            class="h-full w-full object-cover transition-opacity duration-500 ease-in-out opacity-0 animate-fade-in"
-          />
-        </div>
-
-        <!-- Product Info -->
-        <div class="flex flex-col justify-between">
-          <div>
-            <!-- Title -->
-            <h3 class="text-2xl font-bold text-gray-900">{{ product.product_name }}</h3>
-            <!-- Description -->
-            <p class="mt-4 text-lg text-gray-500">
-              {{ product.description }}
-            </p>
-            <!-- Specifications -->
-            <ul class="mt-4 space-y-2 text-gray-600 list-disc pl-5">
-              <li v-for="(feature, index) in product.product_features" :key="index">
-                {{ feature.feature }}
-              </li>
-            </ul>
-
-            <!-- Action Buttons -->
-            <div class="mt-4">
-              <a
-                href="#"
-                class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
-              >
-                Read More
-              </a>
-              <a
-                href="#"
-                class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
-              >
-                Documentation
-              </a>
-              <a
-                href="#"
-                class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block"
-              >
-                3D View
-              </a>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <!-- Image -->
+          <div class="aspect-square overflow-hidden rounded-lg relative">
+            <img
+              :src="getImageUrl(product)"
+              class="h-full w-full object-cover transition-opacity duration-500 ease-in-out opacity-0 animate-fade-in"
+            />
+            <!-- Out of Stock Banner -->
+            <div
+              v-if="product.quantity <= 0"
+              class="absolute bottom-0 left-0 right-0 bg-red-400 text-white text-center py-1 text-sm font-medium"
+            >
+              Out of Stock
             </div>
-            <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
-            <p class="mt-6 text-l font-bold text-gray-900 text-right">
-              R{{ formatPrice(product.price) }}
-            </p>
           </div>
 
-          <!-- Icons -->
-          <div class="mt-6 flex justify-end gap-4">
-            <button
-              class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-              @click.prevent="toggleWishlist(product)"
-            >
-              <HeartIcon class="h-6 w-6" />
-            </button>
-            <button
-              class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-              @click.prevent="product.quantity > 0 && openAddToCartModal(product)"
-              :disabled="product.quantity <= 0"
-            >
-              <ShoppingCartIcon class="h-6 w-6" />
-            </button>
+          <!-- Product Info -->
+          <div class="flex flex-col justify-between">
+            <div>
+              <!-- Title -->
+              <h3 class="text-2xl font-bold text-gray-900">{{ product.product_name }}</h3>
+              <!-- Description -->
+              <p class="mt-4 text-lg text-gray-500">
+                {{ product.description }}
+              </p>
+              <!-- Specifications -->
+              <ul class="mt-4 space-y-2 text-gray-600 list-disc pl-5">
+                <li v-for="(feature, index) in product.product_features" :key="index">
+                  {{ feature.feature }}
+                </li>
+              </ul>
+
+              <!-- Action Buttons -->
+              <div class="mt-4">
+                <a
+                  href="#"
+                  class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
+                >
+                  Read More
+                </a>
+                <a
+                  href="#"
+                  class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block mr-4"
+                >
+                  Documentation
+                </a>
+                <a
+                  href="#"
+                  class="text-sm font-medium text-gray-600 hover:text-gray-900 inline-block"
+                >
+                  3D View
+                </a>
+              </div>
+              <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
+              <p class="mt-6 text-l font-bold text-gray-900 text-right">
+                R{{ formatPrice(product.price) }}
+              </p>
+            </div>
+
+            <!-- Icons -->
+            <div class="mt-6 flex justify-end gap-4">
+              <button
+                class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+                @click.prevent="toggleWishlist(product)"
+              >
+                <HeartIcon class="h-6 w-6" />
+              </button>
+              <button
+                class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+                @click.prevent="product.quantity > 0 && openAddToCartModal(product)"
+                :disabled="product.quantity <= 0"
+              >
+                <ShoppingCartIcon
+                  class="h-6 w-6"
+                  :class="{ 'fill-current': isInCart(product.id) }"
+                />
+              </button>
+            </div>
           </div>
         </div>
+        <!-- Add divider between featured products, but not after the last one -->
+        <hr v-if="index < featuredProducts.length - 1" class="mt-8 bg-gray-300 h-0.5 border-none" />
       </div>
       <hr class="mt-12 bg-gray-300 h-0.5 border-none" />
     </div>
@@ -270,7 +285,7 @@
 
 <script setup>
 // Imports
-import { onMounted, ref, watch, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProductsStore } from '@/stores/supabase/productsStore'
 import { useShoppingCartStore } from '@/stores/supabase/shoppingCartStore'
@@ -288,17 +303,26 @@ import {
 // Store Initialization
 const store = useProductsStore()
 const cartStore = useShoppingCartStore()
-const { products, loading, error, currentPage, totalPages, categories, selectedCategory } =
-  storeToRefs(store)
+const {
+  products,
+  featuredProducts,
+  loading,
+  error,
+  currentPage,
+  totalPages,
+  categories,
+  selectedCategory,
+} = storeToRefs(store)
 const { isInCart } = cartStore
 
-// Computed properties to separate featured from regular products
-const featuredProducts = computed(() => {
-  return products.value.filter((product) => product.is_featured === true)
-})
+// No need to filter featured products anymore, use them directly from the store
+// const featuredProducts = computed(() => {
+//   return products.value.filter((product) => product.is_featured === true)
+// })
 
 const regularProducts = computed(() => {
-  return products.value.filter((product) => !product.is_featured)
+  // Show all products in the regular product list, regardless of featured status
+  return products.value
 })
 
 // Category filter handling

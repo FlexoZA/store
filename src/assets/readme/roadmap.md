@@ -28,6 +28,8 @@ store/
 │   ├── views/             # Page components
 │   │   ├── auth/          # Authentication pages
 │   │   ├── cart/          # Shopping cart pages
+│   │   ├── admin/         # Admin dashboard pages
+│   │   │   └── AdminDashboard.vue # Main admin dashboard
 │   │   └── HomeView.vue   # Home page
 │   │
 │   ├── stores/            # State management
@@ -35,7 +37,6 @@ store/
 │   │   │   ├── shoppingCartStore.js
 │   │   │   ├── productsStore.js
 │   │   │   ├── searchStore.js
-│   │   │   ├── featuredProductsStore.js
 │   │   │   └── supabaseClient.js
 │   │   │
 │   │   └── authentication/# Authentication state management
@@ -65,15 +66,15 @@ This is an e-commerce store application built with Vue.js, using Supabase as the
 - **Product Catalog**: Display and filtering of products
 - **Shopping Cart**: Add, remove, and manage items in cart
 - **Search Functionality**: Search through product inventory
+- **Admin Dashboard**: Administrative interface for managing products, orders, and users
 
 ## 4. Data Management
 
 The application uses Pinia stores to manage state:
 
 - `shoppingCartStore.js`: Manages shopping cart state and operations
-- `productsStore.js`: Handles product data and operations
+- `productsStore.js`: Handles product data and operations, including featured products via the is_featured flag
 - `searchStore.js`: Manages search functionality
-- `featuredProductsStore.js`: Controls featured products display
 
 ## 5. Backend Integration
 
@@ -126,6 +127,7 @@ This section tracks where key components are used throughout the application:
 | UserRegistrationDialog | src/components/authentication/UserRegistrationDialog.vue | Used in MainNavigation for new user registration                                                                                                                                                                                                                                                                                           |
 | AddToCartModal         | src/components/modals/AddToCartModal.vue                 | Used in MainNavigation for editing cart items                                                                                                                                                                                                                                                                                              |
 | ConfirmationDialog     | src/components/modals/ConfirmationDialog.vue             | Used in MainNavigation for confirmations (logout, remove item)                                                                                                                                                                                                                                                                             |
+| AdminDashboard         | src/views/admin/AdminDashboard.vue                       | Main admin interface with sidebar navigation and dashboard overview. Will be protected by authentication with role-based access control.                                                                                                                                                                                                   |
 
 ## 9. Utilities Usage
 
@@ -196,3 +198,29 @@ Example implementation:
   loading="lazy"
 />
 ```
+
+## 12. Admin Dashboard
+
+The admin dashboard provides an interface for store administrators to manage various aspects of the e-commerce platform:
+
+### Features (Planned)
+
+1. **Dashboard Overview**: Statistics and metrics about store performance
+2. **Product Management**: Add, edit, and remove products from the catalog
+3. **Order Management**: View and process customer orders
+4. **User Management**: Manage customer accounts and admin users
+5. **Settings**: Configure store settings and preferences
+
+### Implementation Status
+
+- Basic dashboard layout with sidebar navigation implemented
+- Dashboard overview with placeholder statistics cards
+- Role-based authentication planned for future implementation
+
+### Access Control
+
+The admin dashboard will be protected by authentication with role-based access control:
+
+- Only users with admin role will be able to access the dashboard
+- Different admin roles may have different permissions (future implementation)
+- Authentication will be integrated with the existing user authentication system
