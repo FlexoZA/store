@@ -23,13 +23,27 @@ store/
 │   │   ├── alerts/        # Alert and notification components
 │   │   ├── cart/          # Shopping cart components
 │   │   ├── loaders/       # Loading indicators
-│   │   └── icons/         # Icon components
+│   │   ├── icons/         # Icon components
+│   │   └── admin/         # Admin dashboard components
+│   │       ├── dashboard/ # Dashboard overview components
+│   │       │   ├── DashboardOverview.vue
+│   │       │   └── StatsOverview.vue
+│   │       ├── products/  # Product management components
+│   │       │   └── AdminProducts.vue
+│   │       ├── orders/    # Order management components
+│   │       │   └── AdminOrders.vue
+│   │       ├── users/     # User management components
+│   │       │   └── AdminUsers.vue
+│   │       ├── settings/  # Settings components
+│   │       │   └── AdminSettings.vue
+│   │       └── navigation/# Admin navigation components
+│   │           └── AdminNavigation.vue
 │   │
 │   ├── views/             # Page components
 │   │   ├── auth/          # Authentication pages
 │   │   ├── cart/          # Shopping cart pages
 │   │   ├── admin/         # Admin dashboard pages
-│   │   │   └── AdminDashboard.vue # Main admin dashboard
+│   │   │   └── AdminDashboard.vue # Main admin dashboard layout
 │   │   └── HomeView.vue   # Home page
 │   │
 │   ├── stores/            # State management
@@ -127,7 +141,14 @@ This section tracks where key components are used throughout the application:
 | UserRegistrationDialog | src/components/authentication/UserRegistrationDialog.vue | Used in MainNavigation for new user registration                                                                                                                                                                                                                                                                                           |
 | AddToCartModal         | src/components/modals/AddToCartModal.vue                 | Used in MainNavigation for editing cart items                                                                                                                                                                                                                                                                                              |
 | ConfirmationDialog     | src/components/modals/ConfirmationDialog.vue             | Used in MainNavigation for confirmations (logout, remove item)                                                                                                                                                                                                                                                                             |
-| AdminDashboard         | src/views/admin/AdminDashboard.vue                       | Main admin interface with sidebar navigation and dashboard overview. Will be protected by authentication with role-based access control.                                                                                                                                                                                                   |
+| AdminDashboard         | src/views/admin/AdminDashboard.vue                       | Main admin interface layout with sidebar navigation and content area. Protected by authentication with role-based access control.                                                                                                                                                                                                          |
+| AdminNavigation        | src/components/admin/navigation/AdminNavigation.vue      | Sidebar navigation component for the admin dashboard, providing links to different admin sections.                                                                                                                                                                                                                                         |
+| DashboardOverview      | src/components/admin/dashboard/DashboardOverview.vue     | Main dashboard overview page component that displays statistics and recent activity.                                                                                                                                                                                                                                                       |
+| StatsOverview          | src/components/admin/dashboard/StatsOverview.vue         | Component displaying key statistics cards for the admin dashboard.                                                                                                                                                                                                                                                                         |
+| AdminProducts          | src/components/admin/products/AdminProducts.vue          | Product management interface for administrators.                                                                                                                                                                                                                                                                                           |
+| AdminOrders            | src/components/admin/orders/AdminOrders.vue              | Order management interface for administrators.                                                                                                                                                                                                                                                                                             |
+| AdminUsers             | src/components/admin/users/AdminUsers.vue                | User management interface for administrators.                                                                                                                                                                                                                                                                                              |
+| AdminSettings          | src/components/admin/settings/AdminSettings.vue          | Store settings management interface for administrators.                                                                                                                                                                                                                                                                                    |
 
 ## 9. Utilities Usage
 
@@ -203,24 +224,83 @@ Example implementation:
 
 The admin dashboard provides an interface for store administrators to manage various aspects of the e-commerce platform:
 
-### Features (Planned)
+### Features (Implemented)
 
 1. **Dashboard Overview**: Statistics and metrics about store performance
-2. **Product Management**: Add, edit, and remove products from the catalog
-3. **Order Management**: View and process customer orders
-4. **User Management**: Manage customer accounts and admin users
-5. **Settings**: Configure store settings and preferences
+
+   - Total sales with trend indicator
+   - New orders count with weekly comparison
+   - Total products count with new additions
+   - Active users count with monthly comparison
+
+2. **Product Management**: Interface for managing products
+
+   - Product listing with pagination (20 products per page)
+   - Search functionality for products by name
+   - Category filtering with hardcoded categories
+   - Add/Edit/Delete product capabilities
+   - Product details display including name, price, description, stock levels
+   - Separate admin product store to avoid caching issues with regular product store
+
+3. **Order Management**: Interface for managing orders
+
+   - Order listing
+   - Status filtering
+   - Search functionality
+   - Order details view (placeholder)
+
+4. **User Management**: Interface for managing users
+
+   - User listing
+   - Role filtering
+   - Search functionality
+   - User details view (placeholder)
+
+5. **Settings**: Store configuration interface
+   - Store information management
+   - Payment settings
+   - Shipping settings
 
 ### Implementation Status
 
 - Basic dashboard layout with sidebar navigation implemented
-- Dashboard overview with placeholder statistics cards
+- Dashboard overview with statistics cards implemented
+- Placeholder components for products, orders, users, and settings
 - Role-based authentication planned for future implementation
 
 ### Access Control
 
-The admin dashboard will be protected by authentication with role-based access control:
+The admin dashboard is protected by authentication with role-based access control:
 
 - Only users with admin role will be able to access the dashboard
 - Different admin roles may have different permissions (future implementation)
-- Authentication will be integrated with the existing user authentication system
+- Authentication is integrated with the existing user authentication system
+
+### Component Structure
+
+The admin dashboard is organized into the following components:
+
+1. **Layout Components**
+
+   - `AdminDashboard.vue`: Main layout component with sidebar and content area
+   - `AdminNavigation.vue`: Sidebar navigation component
+
+2. **Page Components**
+   - `DashboardOverview.vue`: Main dashboard page
+   - `StatsOverview.vue`: Statistics cards component
+   - `AdminProducts.vue`: Product management interface
+   - `AdminOrders.vue`: Order management interface
+   - `AdminUsers.vue`: User management interface
+   - `AdminSettings.vue`: Store settings interface
+
+### Routing
+
+The admin dashboard uses nested routes under the `/admin` path:
+
+- `/admin`: Dashboard overview
+- `/admin/products`: Product management
+- `/admin/orders`: Order management
+- `/admin/users`: User management
+- `/admin/settings`: Store settings
+
+All admin routes are protected by authentication and require admin role access.
