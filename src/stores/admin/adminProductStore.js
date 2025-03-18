@@ -86,7 +86,7 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
       const { data, error: supaError } = await supabase
         .from('categories')
         .select('id, category_name, enabled, category_description')
-        .order('id')
+        .order('category_name')
 
       console.log('Supabase response:', { data, supaError })
 
