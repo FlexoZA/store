@@ -58,7 +58,14 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
           sku,
           category_id,
           is_featured,
-          enabled
+          enabled,
+          product_image (
+            id,
+            product_id,
+            url,
+            name,
+            default
+          )
         `,
         )
         .order('product_name')
@@ -77,69 +84,31 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
     }
   }
 
-  // Get all categories (admin version includes disabled categories)
+  // Get all categories
   const getCategories = async () => {
     isLoading.value = true
     error.value = null
-    console.log('Starting category fetch from Supabase for admin panel...')
 
     try {
-      // Try fetching categories from Supabase
       const { data, error: supaError } = await supabase
         .from('categories')
         .select('id, category_name, enabled, category_description')
         .order('category_name')
 
-      console.log('Supabase response:', { data, supaError })
-
+      // Check for Supabase error first
       if (supaError) {
         console.error('Supabase query error:', supaError)
         await logError(supaError, 'adminProductStore', {
           component: 'getCategories',
         })
-        // Don't throw error, instead use hardcoded categories
+        throw supaError
       }
 
-      // If data exists and has items, use it
-      if (data && data.length > 0) {
-        categories.value = data
-        console.log('Categories loaded from Supabase:', categories.value)
-      } else {
-        // Otherwise, use hardcoded categories
-        console.log('Using hardcoded categories')
-        categories.value = [
-          {
-            id: 1,
-            category_name: 'Electronics',
-            enabled: true,
-            category_description: 'Electronic devices and accessories',
-          },
-          {
-            id: 2,
-            category_name: 'Clothing',
-            enabled: true,
-            category_description: 'Apparel and fashion items',
-          },
-          {
-            id: 3,
-            category_name: 'Home & Kitchen',
-            enabled: true,
-            category_description: 'Home decor and kitchen products',
-          },
-          {
-            id: 4,
-            category_name: 'Books',
-            enabled: true,
-            category_description: 'Books and reading materials',
-          },
-          {
-            id: 5,
-            category_name: 'Sports & Outdoors',
-            enabled: true,
-            category_description: 'Sports equipment and outdoor gear',
-          },
-        ]
-        console.log('Hardcoded categories set:', categories.value)
+      // Update categories with fetched data
+      categories.value = data || []
+
+      if (categories.value.length === 0) {
+        console.warn('No categories found in database')
       }
     } catch (err) {
       console.error('Category fetch failed:', err)
@@ -147,44 +116,9 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
       await logError(err, 'adminProductStore', {
         component: 'getCategories',
       })
-
-      // Fallback to hardcoded categories if any error occurs
-      console.log('Falling back to hardcoded categories due to error')
-      categories.value = [
-        {
-          id: 1,
-          category_name: 'Electronics',
-          enabled: true,
-          category_description: 'Electronic devices and accessories',
-        },
-        {
-          id: 2,
-          category_name: 'Clothing',
-          enabled: true,
-          category_description: 'Apparel and fashion items',
-        },
-        {
-          id: 3,
-          category_name: 'Home & Kitchen',
-          enabled: true,
-          category_description: 'Home decor and kitchen products',
-        },
-        {
-          id: 4,
-          category_name: 'Books',
-          enabled: true,
-          category_description: 'Books and reading materials',
-        },
-        {
-          id: 5,
-          category_name: 'Sports & Outdoors',
-          enabled: true,
-          category_description: 'Sports equipment and outdoor gear',
-        },
-      ]
+      categories.value = [] // Reset to empty array on error
     } finally {
       isLoading.value = false
-      console.log('Category fetch completed with', categories.value.length, 'categories')
     }
   }
 
@@ -305,7 +239,14 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
           sku,
           category_id,
           is_featured,
-          enabled
+          enabled,
+          product_image (
+            id,
+            product_id,
+            url,
+            name,
+            default
+          )
         `,
         )
         .or(`product_name.ilike.%${query}%,description.ilike.%${query}%`)
@@ -378,7 +319,14 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
           sku,
           category_id,
           is_featured,
-          enabled
+          enabled,
+          product_image (
+            id,
+            product_id,
+            url,
+            name,
+            default
+          )
         `,
         )
         .order('product_name')

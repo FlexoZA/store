@@ -32,7 +32,7 @@ const router = createRouter({
       component: () => import('../views/admin/AdminDashboard.vue'),
       meta: {
         requiresAuth: true,
-        //requiresAdmin: true,
+        requiresAdmin: true,
         layout: 'admin',
       },
       children: [
@@ -86,13 +86,19 @@ router.beforeEach(async (to, from, next) => {
   // If route requires auth and user is not logged in, redirect to login
   if (requiresAuth && !currentUser) {
     next({ name: 'login', query: { redirect: to.fullPath } })
+    return
   }
-  // If route requires admin role and user doesn't have it, redirect to home
-  else if (requiresAdmin && (!currentUser || !authStore.hasAdminRole())) {
-    next({ name: 'home' })
-  } else {
-    next()
+
+  // If route requires admin role, check admin status
+  if (requiresAdmin) {
+    const isAdmin = await authStore.hasAdminRole()
+    if (!currentUser || !isAdmin) {
+      next({ name: 'home' })
+      return
+    }
   }
+
+  next()
 })
 
 export default router

@@ -45,13 +45,6 @@
             >
               <ArrowPathIcon class="h-5 w-5" />
             </button>
-            <button
-              @click="testFetchCategories"
-              class="p-2 text-gray-500 hover:text-gray-700"
-              title="Test fetch categories"
-            >
-              <FunnelIcon class="h-5 w-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -118,10 +111,7 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10">
-                    <img
-                      class="h-10 w-10 rounded-md object-cover"
-                      src="https://via.placeholder.com/150"
-                    />
+                    <img class="h-10 w-10 rounded-md object-cover" :src="getImageUrl(product)" />
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">{{ product.product_name }}</div>
@@ -251,29 +241,36 @@
 
     <!-- Add product modal placeholder -->
     <!-- Delete confirmation modal placeholder -->
-    <!-- Edit product modal placeholder -->
+    <!-- Edit product modal -->
+    <UpdateProduct
+      v-if="showEditModal"
+      :show="showEditModal"
+      :product="currentProduct"
+      @close="showEditModal = false"
+      @updated="handleProductUpdated"
+    />
   </div>
 </template>
 
 <script>
 import {
   ArrowPathIcon,
-  FunnelIcon,
   ArrowLeftIcon as ChevronLeftIcon,
   ArrowRightIcon as ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
 import { ref, onMounted } from 'vue'
 import { useAdminProductStore } from '@/stores/admin/adminProductStore'
 import AdminProductSkeleton from '@/components/loaders/AdminProductSkeleton.vue'
+import UpdateProduct from './UpdateProduct.vue'
 
 export default {
   name: 'AdminProducts',
   components: {
     ArrowPathIcon,
-    FunnelIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
     AdminProductSkeleton,
+    UpdateProduct,
   },
   setup() {
     const productStore = useAdminProductStore()
@@ -283,6 +280,16 @@ export default {
     const showDeleteModal = ref(false)
     const showEditModal = ref(false)
     const currentProduct = ref(null)
+
+    // Helper function to get image URL
+    const getImageUrl = (product) => {
+      if (product.product_image && product.product_image.length > 0) {
+        const defaultImage =
+          product.product_image.find((img) => img.is_default) || product.product_image[0]
+        return defaultImage.url
+      }
+      return '/placeholder.jpg'
+    }
 
     onMounted(async () => {
       await Promise.all([productStore.fetchProducts(), productStore.getCategories()])
@@ -356,15 +363,8 @@ export default {
       }
     }
 
-    const testFetchCategories = async () => {
-      console.log('Reloading hardcoded categories')
-      try {
-        await productStore.fetchCategories()
-        alert(`Successfully loaded ${productStore.categories.length} hardcoded categories`)
-      } catch (e) {
-        console.error('Error loading categories:', e)
-        alert('Error loading categories: ' + e.message)
-      }
+    const handleProductUpdated = async () => {
+      await refreshProducts()
     }
 
     return {
@@ -382,7 +382,8 @@ export default {
       editProduct,
       promptDeleteProduct,
       handlePageChange,
-      testFetchCategories,
+      handleProductUpdated,
+      getImageUrl,
     }
   },
 }

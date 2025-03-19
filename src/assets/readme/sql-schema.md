@@ -34,6 +34,28 @@ create table public.product_image (
   constraint item_image_pkey primary key (id),
   constraint product_image_product_id_fkey foreign KEY (product_id) references products (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;
+
+-- Enable RLS on product_image table
+alter table public.product_image enable row level security;
+
+-- Policy for viewing product images (allowed for everyone)
+create policy "Anyone can view product images"
+  on public.product_image
+  for select
+  using (true);
+
+-- Policy for managing product images (only authenticated admins)
+create policy "Only admins can manage product images"
+  on public.product_image
+  for all
+  using (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from auth.users
+      where auth.users.id = auth.uid()
+      and auth.users.role = 'admin'
+    )
+  );
 ```
 
 ## product_features

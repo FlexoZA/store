@@ -22,6 +22,11 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = initialSession?.user ?? null
       loading.value = false
 
+      // Debug log
+      if (user.value) {
+        console.log('Current user ID:', user.value.id)
+      }
+
       // Set up auth state change listener
       supabase.auth.onAuthStateChange((_event, newSession) => {
         session.value = newSession
@@ -43,8 +48,9 @@ export const useAuthStore = defineStore('auth', () => {
       })
       if (error) throw error
 
-      // If sign up successful, create the profile
+      // If sign up successful, create the profile and set user role
       if (data?.user) {
+        // Create user profile
         const { error: profileError } = await supabase.from('profiles').insert([
           {
             id: data.user.id,
@@ -52,10 +58,20 @@ export const useAuthStore = defineStore('auth', () => {
           },
         ])
         if (profileError) throw profileError
+
+        // Set default user role
+        const { error: roleError } = await supabase.from('user_roles').insert([
+          {
+            user_id: data.user.id,
+            role: 'user',
+          },
+        ])
+        if (roleError) throw roleError
       }
 
       return { data, error: null }
     } catch (error) {
+      console.error('Error during sign up:', error)
       return { data: null, error }
     }
   }
@@ -91,6 +107,31 @@ export const useAuthStore = defineStore('auth', () => {
   // Get the current session
   const getSession = () => session.value
 
+  // Check if the current user has admin role
+  const hasAdminRole = async () => {
+    if (!user.value) return false
+
+    try {
+      // First check if the user_roles table exists and has our user
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.value.id)
+        .eq('role', 'admin')
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error checking admin role:', error)
+        return false
+      }
+
+      return !!data // Return true if we found a matching admin role
+    } catch (error) {
+      console.error('Error checking admin role:', error)
+      return false
+    }
+  }
+
   return {
     user,
     session,
@@ -101,5 +142,6 @@ export const useAuthStore = defineStore('auth', () => {
     signOut,
     getCurrentUser,
     getSession,
+    hasAdminRole,
   }
 })

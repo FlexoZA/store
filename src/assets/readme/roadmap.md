@@ -149,6 +149,7 @@ This section tracks where key components are used throughout the application:
 | AdminOrders            | src/components/admin/orders/AdminOrders.vue              | Order management interface for administrators.                                                                                                                                                                                                                                                                                             |
 | AdminUsers             | src/components/admin/users/AdminUsers.vue                | User management interface for administrators.                                                                                                                                                                                                                                                                                              |
 | AdminSettings          | src/components/admin/settings/AdminSettings.vue          | Store settings management interface for administrators.                                                                                                                                                                                                                                                                                    |
+| UpdateProduct          | src/components/admin/products/UpdateProduct.vue          | Modal component used in AdminProducts for updating existing products. Provides form interface for editing product details including name, SKU, description, price, quantity, category, featured status and enabled status.                                                                                                                 |
 
 ## 9. Utilities Usage
 
@@ -304,3 +305,142 @@ The admin dashboard uses nested routes under the `/admin` path:
 - `/admin/settings`: Store settings
 
 All admin routes are protected by authentication and require admin role access.
+
+## 13. Row Level Security (RLS) Policies
+
+Supabase RLS policies are implemented to secure database access at the row level:
+
+### Products Table Policies
+
+1. **Read Access**
+
+   ```sql
+   CREATE POLICY "Public read access" ON products
+   FOR SELECT USING (
+     enabled = true OR
+     auth.role() = 'admin'
+   );
+   ```
+
+   - Allows public read access to enabled products
+   - Admins can view all products regardless of enabled status
+
+2. **Write Access**
+   ```sql
+   CREATE POLICY "Admin full access" ON products
+   FOR ALL USING (
+     auth.role() = 'admin'
+   );
+   ```
+   - Only admins can insert, update, or delete products
+
+### Orders Table Policies
+
+1. **Read Access**
+
+   ```sql
+   CREATE POLICY "Users can view own orders" ON orders
+   FOR SELECT USING (
+     auth.uid() = user_id OR
+     auth.role() = 'admin'
+   );
+   ```
+
+   - Users can only view their own orders
+   - Admins can view all orders
+
+2. **Write Access**
+   ```sql
+   CREATE POLICY "Users can create orders" ON orders
+   FOR INSERT WITH CHECK (
+     auth.uid() = user_id
+   );
+   ```
+   - Users can only create orders for themselves
+   ```sql
+   CREATE POLICY "Admin order management" ON orders
+   FOR ALL USING (
+     auth.role() = 'admin'
+   );
+   ```
+   - Admins have full control over all orders
+
+### User Profiles Policies
+
+1. **Read Access**
+
+   ```sql
+   CREATE POLICY "Public profiles are viewable" ON profiles
+   FOR SELECT USING (
+     is_public = true OR
+     auth.uid() = id OR
+     auth.role() = 'admin'
+   );
+   ```
+
+   - Public profiles are viewable by anyone
+   - Users can view their own profile
+   - Admins can view all profiles
+
+2. **Write Access**
+   ```sql
+   CREATE POLICY "Users can update own profile" ON profiles
+   FOR UPDATE USING (
+     auth.uid() = id
+   );
+   ```
+   - Users can only update their own profile
+   ```sql
+   CREATE POLICY "Admin profile management" ON profiles
+   FOR ALL USING (
+     auth.role() = 'admin'
+   );
+   ```
+   - Admins have full control over all profiles
+
+### Categories Table Policies
+
+1. **Read Access**
+
+   ```sql
+   CREATE POLICY "Public read access" ON categories
+   FOR SELECT USING (true);
+   ```
+
+   - Categories are publicly readable
+
+2. **Write Access**
+   ```sql
+   CREATE POLICY "Admin only write access" ON categories
+   FOR ALL USING (
+     auth.role() = 'admin'
+   );
+   ```
+   - Only admins can modify categories
+
+### Product Images Table Policies
+
+1. **Read Access**
+
+   ```sql
+   CREATE POLICY "Public read access" ON product_images
+   FOR SELECT USING (
+     EXISTS (
+       SELECT 1 FROM products
+       WHERE products.id = product_images.product_id
+       AND products.enabled = true
+     ) OR auth.role() = 'admin'
+   );
+   ```
+
+   - Images are viewable if associated product is enabled
+   - Admins can view all images
+
+2. **Write Access**
+   ```sql
+   CREATE POLICY "Admin only write access" ON product_images
+   FOR ALL USING (
+     auth.role() = 'admin'
+   );
+   ```
+   - Only admins can modify product images
