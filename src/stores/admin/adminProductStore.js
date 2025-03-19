@@ -77,11 +77,11 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
     }
   }
 
-  // Get all categories
-  async function fetchCategories() {
+  // Get all categories (admin version includes disabled categories)
+  const getCategories = async () => {
     isLoading.value = true
     error.value = null
-    console.log('Starting category fetch from Supabase...')
+    console.log('Starting category fetch from Supabase for admin panel...')
 
     try {
       // Try fetching categories from Supabase
@@ -95,7 +95,7 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
       if (supaError) {
         console.error('Supabase query error:', supaError)
         await logError(supaError, 'adminProductStore', {
-          component: 'fetchCategories',
+          component: 'getCategories',
         })
         // Don't throw error, instead use hardcoded categories
       }
@@ -145,7 +145,7 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
       console.error('Category fetch failed:', err)
       error.value = err.message
       await logError(err, 'adminProductStore', {
-        component: 'fetchCategories',
+        component: 'getCategories',
       })
 
       // Fallback to hardcoded categories if any error occurs
@@ -198,7 +198,6 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
         .from('products')
         .insert(productData)
         .select()
-
       if (supabaseError) throw supabaseError
 
       // Refresh the current page to show the new product
@@ -462,7 +461,7 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
     currentCategoryId,
     currentAction,
     fetchProducts,
-    fetchCategories,
+    getCategories,
     createProduct,
     updateProduct,
     deleteProduct,

@@ -223,7 +223,9 @@
                   type="button"
                   :class="[
                     'px-4 py-2 text-sm font-semibold focus:outline-none cursor-pointer',
-                    page === productStore.currentPage ? 'text-black' : 'text-gray-500 hover:text-black',
+                    page === productStore.currentPage
+                      ? 'text-black'
+                      : 'text-gray-500 hover:text-black',
                   ]"
                 >
                   {{ page }}
@@ -258,7 +260,7 @@ import {
   ArrowPathIcon,
   FunnelIcon,
   ArrowLeftIcon as ChevronLeftIcon,
-  ArrowRightIcon as ChevronRightIcon
+  ArrowRightIcon as ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
 import { ref, onMounted } from 'vue'
 import { useAdminProductStore } from '@/stores/admin/adminProductStore'
@@ -283,7 +285,7 @@ export default {
     const currentProduct = ref(null)
 
     onMounted(async () => {
-      await Promise.all([productStore.fetchProducts(), productStore.fetchCategories()])
+      await Promise.all([productStore.fetchProducts(), productStore.getCategories()])
     })
 
     const refreshProducts = async () => {
