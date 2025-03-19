@@ -20,7 +20,7 @@
               type="text"
               placeholder="Search products..."
               class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @keyup.enter="handleSearch"
+              @input="handleSearch"
             />
             <select
               v-model="selectedCategory"
@@ -58,7 +58,8 @@
 
       <!-- Products table -->
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <AdminProductSkeleton v-if="productStore.isLoading" />
+        <table v-else class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th
@@ -168,121 +169,79 @@
 
       <!-- Pagination -->
       <div
-        v-if="productStore.totalProducts > 0"
-        class="px-6 py-4 bg-white border-t border-gray-200"
+        v-if="productStore.totalProducts > 0 && !searchQuery.trim()"
+        class="mt-8 flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6"
       >
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-700">
-            Showing
-            <span class="font-medium">{{ getPaginationRange().start }}</span>
-            to
-            <span class="font-medium">{{ getPaginationRange().end }}</span>
-            of
-            <span class="font-medium">{{ productStore.totalProducts }}</span>
-            products
+        <!-- Mobile Pagination -->
+        <div class="flex flex-1 justify-between sm:hidden">
+          <button
+            @click="handlePageChange(productStore.currentPage - 1)"
+            :disabled="!productStore.hasPreviousPage"
+            class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700"
+            :class="{ 'opacity-50 cursor-not-allowed': !productStore.hasPreviousPage }"
+          >
+            Previous
+          </button>
+          <button
+            @click="handlePageChange(productStore.currentPage + 1)"
+            :disabled="!productStore.hasNextPage"
+            class="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700"
+            :class="{ 'opacity-50 cursor-not-allowed': !productStore.hasNextPage }"
+          >
+            Next
+          </button>
+        </div>
+
+        <!-- Desktop Pagination -->
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <!-- Page Information -->
+          <div>
+            <p class="text-sm text-gray-700">
+              Showing page <span class="font-medium">{{ productStore.currentPage }}</span> of
+              <span class="font-medium">{{ productStore.totalPages }}</span>
+            </p>
           </div>
-          <div class="flex justify-end items-center space-x-2">
-            <button
-              @click="productStore.previousPage"
-              :disabled="!productStore.hasPreviousPage"
-              class="px-3 py-1 border rounded-md text-sm font-medium"
-              :class="
-                productStore.hasPreviousPage
-                  ? 'text-blue-500 hover:bg-blue-50'
-                  : 'text-gray-300 cursor-not-allowed'
-              "
-            >
-              Previous
-            </button>
 
-            <div v-if="productStore.totalPages <= 7" class="hidden sm:flex space-x-1">
+          <!-- Pagination Navigation -->
+          <div>
+            <nav class="isolate inline-flex -space-x-px" aria-label="Pagination">
+              <!-- Previous Page Button -->
               <button
-                v-for="page in productStore.totalPages"
-                :key="page"
-                @click="productStore.goToPage(page)"
-                class="px-3 py-1 border rounded-md text-sm font-medium"
-                :class="
-                  page === productStore.currentPage
-                    ? 'bg-blue-500 text-white'
-                    : 'text-blue-500 hover:bg-blue-50'
-                "
+                @click="handlePageChange(productStore.currentPage - 1)"
+                :disabled="!productStore.hasPreviousPage"
+                class="relative inline-flex items-center px-2 py-2 text-gray-400 cursor-pointer"
+                :class="{ 'opacity-50 cursor-not-allowed': !productStore.hasPreviousPage }"
               >
-                {{ page }}
-              </button>
-            </div>
-
-            <div v-else class="hidden sm:flex space-x-1">
-              <!-- First page -->
-              <button
-                @click="productStore.goToPage(1)"
-                class="px-3 py-1 border rounded-md text-sm font-medium"
-                :class="
-                  1 === productStore.currentPage
-                    ? 'bg-blue-500 text-white'
-                    : 'text-blue-500 hover:bg-blue-50'
-                "
-              >
-                1
+                <span class="sr-only">Previous</span>
+                <ChevronLeftIcon class="h-5 w-5" />
               </button>
 
-              <!-- Ellipsis if needed -->
-              <span v-if="getPaginationArray()[0] > 2" class="px-2 py-1 text-gray-500">...</span>
+              <!-- Page Numbers -->
+              <template v-for="page in productStore.totalPages" :key="page">
+                <button
+                  @click="handlePageChange(page)"
+                  type="button"
+                  :class="[
+                    'px-4 py-2 text-sm font-semibold focus:outline-none cursor-pointer',
+                    page === productStore.currentPage ? 'text-black' : 'text-gray-500 hover:text-black',
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </template>
 
-              <!-- Middle pages -->
+              <!-- Next Page Button -->
               <button
-                v-for="page in getPaginationArray()"
-                :key="page"
-                @click="productStore.goToPage(page)"
-                class="px-3 py-1 border rounded-md text-sm font-medium"
-                :class="
-                  page === productStore.currentPage
-                    ? 'bg-blue-500 text-white'
-                    : 'text-blue-500 hover:bg-blue-50'
-                "
+                type="text"
+                @click="handlePageChange(productStore.currentPage + 1)"
+                :disabled="!productStore.hasNextPage"
+                class="relative inline-flex items-center px-2 py-2 text-gray-400 cursor-pointer"
+                :class="{ 'opacity-50 cursor-not-allowed': !productStore.hasNextPage }"
               >
-                {{ page }}
+                <span class="sr-only">Next</span>
+                <ChevronRightIcon class="h-5 w-5" />
               </button>
-
-              <!-- Ellipsis if needed -->
-              <span
-                v-if="
-                  getPaginationArray()[getPaginationArray().length - 1] <
-                  productStore.totalPages - 1
-                "
-                class="px-2 py-1 text-gray-500"
-              >
-                ...
-              </span>
-
-              <!-- Last page if not already included -->
-              <button
-                v-if="
-                  getPaginationArray()[getPaginationArray().length - 1] !== productStore.totalPages
-                "
-                @click="productStore.goToPage(productStore.totalPages)"
-                class="px-3 py-1 border rounded-md text-sm font-medium"
-                :class="
-                  productStore.totalPages === productStore.currentPage
-                    ? 'bg-blue-500 text-white'
-                    : 'text-blue-500 hover:bg-blue-50'
-                "
-              >
-                {{ productStore.totalPages }}
-              </button>
-            </div>
-
-            <button
-              @click="productStore.nextPage"
-              :disabled="!productStore.hasNextPage"
-              class="px-3 py-1 border rounded-md text-sm font-medium"
-              :class="
-                productStore.hasNextPage
-                  ? 'text-blue-500 hover:bg-blue-50'
-                  : 'text-gray-300 cursor-not-allowed'
-              "
-            >
-              Next
-            </button>
+            </nav>
           </div>
         </div>
       </div>
@@ -295,15 +254,24 @@
 </template>
 
 <script>
-import { ArrowPathIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowPathIcon,
+  FunnelIcon,
+  ArrowLeftIcon as ChevronLeftIcon,
+  ArrowRightIcon as ChevronRightIcon
+} from '@heroicons/vue/24/outline'
 import { ref, onMounted } from 'vue'
 import { useAdminProductStore } from '@/stores/admin/adminProductStore'
+import AdminProductSkeleton from '@/components/loaders/AdminProductSkeleton.vue'
 
 export default {
   name: 'AdminProducts',
   components: {
     ArrowPathIcon,
     FunnelIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    AdminProductSkeleton,
   },
   setup() {
     const productStore = useAdminProductStore()
@@ -319,6 +287,7 @@ export default {
     })
 
     const refreshProducts = async () => {
+      window.scrollTo({ top: 0 })
       if (searchQuery.value.trim()) {
         await productStore.searchProducts(searchQuery.value, 1)
       } else if (selectedCategory.value) {
@@ -330,7 +299,7 @@ export default {
 
     const handleSearch = () => {
       if (searchQuery.value.trim()) {
-        productStore.searchProducts(searchQuery.value, 1)
+        productStore.debouncedSearch(searchQuery.value)
       } else {
         productStore.fetchProducts(1)
       }
@@ -369,55 +338,20 @@ export default {
       showDeleteModal.value = true
     }
 
-    // Helper function to get the pagination range for display
-    const getPaginationRange = () => {
-      if (!productStore.totalProducts || productStore.totalProducts === 0) {
-        return { start: 0, end: 0 }
+    const handlePageChange = (page) => {
+      // Only proceed if page is valid
+      if (page >= 1 && page <= productStore.totalPages) {
+        window.scrollTo({ top: 0 })
+
+        // Determine which action to perform based on current state
+        if (productStore.currentAction === 'search' && searchQuery.value.trim()) {
+          productStore.searchProducts(searchQuery.value, page)
+        } else if (productStore.currentAction === 'filter' && selectedCategory.value) {
+          productStore.filterProductsByCategory(selectedCategory.value, page)
+        } else {
+          productStore.fetchProducts(page)
+        }
       }
-
-      const start =
-        productStore.products.length > 0
-          ? (productStore.currentPage - 1) * productStore.pageSize + 1
-          : 0
-
-      const end = Math.min(start + productStore.products.length - 1, productStore.totalProducts)
-
-      return { start, end }
-    }
-
-    // Helper function to get the pagination array for display
-    const getPaginationArray = () => {
-      const totalPages = productStore.totalPages || 0
-      const currentPage = productStore.currentPage || 1
-
-      // If no pages or only one page, return empty array
-      if (totalPages <= 1) {
-        return []
-      }
-
-      // Show 5 page numbers centered around current page
-      let startPage = Math.max(currentPage - 2, 2)
-      let endPage = Math.min(startPage + 4, totalPages - 1)
-
-      // Adjust if we're near the end
-      if (endPage >= totalPages - 1) {
-        endPage = totalPages - 1
-        startPage = Math.max(endPage - 4, 2)
-      }
-
-      // Adjust if we're near the beginning
-      if (startPage <= 2) {
-        startPage = 2
-        endPage = Math.min(startPage + 4, totalPages - 1)
-      }
-
-      // Create array of page numbers to display
-      const pages = []
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i)
-      }
-
-      return pages
     }
 
     const testFetchCategories = async () => {
@@ -445,8 +379,7 @@ export default {
       getCategoryName,
       editProduct,
       promptDeleteProduct,
-      getPaginationRange,
-      getPaginationArray,
+      handlePageChange,
       testFetchCategories,
     }
   },

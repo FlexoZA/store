@@ -15,6 +15,8 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
   const currentQuery = ref('')
   const currentCategoryId = ref(null)
   const currentAction = ref('fetch') // 'fetch', 'search', or 'filter'
+  // Timeout for debouncing
+  let searchTimeout = null
 
   // Computed
   const totalPages = computed(() => Math.ceil(totalProducts.value / pageSize.value))
@@ -277,6 +279,13 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
 
   // Search products with pagination
   async function searchProducts(query, page = 1) {
+    // Clear results if query is too short
+    if (!query || query.trim().length < 2) {
+      products.value = []
+      totalProducts.value = 0
+      return
+    }
+
     isLoading.value = true
     error.value = null
     currentPage.value = page
@@ -285,20 +294,6 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
     currentAction.value = 'search'
 
     try {
-      // First get the total count for the search
-      const { count, error: countError } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .or(`product_name.ilike.%${query}%,description.ilike.%${query}%`)
-
-      if (countError) throw countError
-
-      totalProducts.value = count || 0
-
-      // Then get the data for the current page
-      const from = (page - 1) * pageSize.value
-      const to = from + pageSize.value - 1
-
       const { data, error: supabaseError } = await supabase
         .from('products')
         .select(
@@ -316,11 +311,12 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
         )
         .or(`product_name.ilike.%${query}%,description.ilike.%${query}%`)
         .order('product_name')
-        .range(from, to)
+        .limit(10) // Limit results to prevent performance issues
 
       if (supabaseError) throw supabaseError
 
       products.value = data || []
+      totalProducts.value = data?.length || 0
     } catch (err) {
       error.value = err.message
       console.error('Error searching products:', err)
@@ -329,6 +325,19 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
     } finally {
       isLoading.value = false
     }
+  }
+
+  // Debounced search function for typing
+  function debouncedSearch(query) {
+    // Clear any pending timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+
+    // Set new timeout
+    searchTimeout = setTimeout(() => {
+      searchProducts(query)
+    }, 300) // 300ms debounce delay
   }
 
   // Filter products by category with pagination
@@ -458,6 +467,7 @@ export const useAdminProductStore = defineStore('adminProducts', () => {
     updateProduct,
     deleteProduct,
     searchProducts,
+    debouncedSearch,
     filterProductsByCategory,
     nextPage,
     previousPage,
