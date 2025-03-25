@@ -240,6 +240,12 @@
     </div>
 
     <!-- Add product modal placeholder -->
+    <CreateProduct
+      v-if="showAddProductModal"
+      :show="showAddProductModal"
+      @close="showAddProductModal = false"
+      @created="handleProductCreated"
+    />
     <!-- Delete confirmation modal placeholder -->
     <!-- Edit product modal -->
     <UpdateProduct
@@ -262,6 +268,7 @@ import { ref, onMounted } from 'vue'
 import { useAdminProductStore } from '@/stores/admin/adminProductStore'
 import AdminProductSkeleton from '@/components/loaders/AdminProductSkeleton.vue'
 import UpdateProduct from './UpdateProduct.vue'
+import CreateProduct from './CreateProduct.vue'
 
 export default {
   name: 'AdminProducts',
@@ -271,6 +278,7 @@ export default {
     ChevronRightIcon,
     AdminProductSkeleton,
     UpdateProduct,
+    CreateProduct,
   },
   setup() {
     const productStore = useAdminProductStore()
@@ -367,6 +375,10 @@ export default {
       await refreshProducts()
     }
 
+    const handleProductCreated = async () => {
+      await refreshProducts()
+    }
+
     return {
       productStore,
       searchQuery,
@@ -383,6 +395,7 @@ export default {
       promptDeleteProduct,
       handlePageChange,
       handleProductUpdated,
+      handleProductCreated,
       getImageUrl,
     }
   },
