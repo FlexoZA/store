@@ -140,7 +140,7 @@
     >
       <!-- Product Card -->
       <div v-for="product in regularProducts" :key="product.id" class="group relative">
-        <a href="#">
+        <router-link :to="`/product/${product.id}`">
           <!-- Product Image Container with Relative Positioning -->
           <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
             <!-- Product Image -->
@@ -193,7 +193,7 @@
               </button>
             </div>
           </div>
-        </a>
+        </router-link>
       </div>
     </div>
 

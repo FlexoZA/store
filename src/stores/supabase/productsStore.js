@@ -418,6 +418,79 @@ export const useProductsStore = defineStore('products', () => {
     }
   }
 
+  /**
+   * Fetches a single product by its ID
+   * @param {number} productId - The ID of the product to fetch
+   * @returns {Promise<Object|null>} The product data or null if not found
+   */
+  const getProductById = async (productId) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { data, error: supaError } = await supabase
+        .from('products')
+        .select(
+          `
+          id,
+          product_name,
+          description,
+          price,
+          quantity,
+          sku,
+          material_id,
+          category_id,
+          is_bundled,
+          is_featured,
+          enabled,
+          allow_no_stock_sale,
+          product_image (
+            id,
+            product_id,
+            url,
+            name
+          ),
+          product_features (
+            id,
+            product_id,
+            feature
+          )
+        `,
+        )
+        .eq('id', productId)
+        .single()
+
+      if (supaError) {
+        await logError(supaError, 'productsStore', {
+          productId,
+          component: 'getProductById',
+        })
+        throw supaError
+      }
+
+      if (!data) {
+        error.value = 'Product not found'
+        return null
+      }
+
+      // Ensure product has valid structure
+      return {
+        ...data,
+        product_image: Array.isArray(data.product_image) ? data.product_image : [],
+        product_features: Array.isArray(data.product_features) ? data.product_features : [],
+      }
+    } catch (e) {
+      error.value = e.message
+      await logError(e, 'productsStore', {
+        productId,
+        component: 'getProductById',
+      })
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Call validateCache immediately to ensure cache integrity
   validateCache()
 
@@ -436,5 +509,6 @@ export const useProductsStore = defineStore('products', () => {
     getCategories,
     clearProductsCache,
     validateCache, // Expose the validate function
+    getProductById,
   }
 })

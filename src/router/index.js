@@ -12,6 +12,12 @@ const router = createRouter({
       meta: { layout: 'default' },
     },
     {
+      path: '/product/:id',
+      name: 'product',
+      component: () => import('../components/products/getProduct.vue'),
+      meta: { layout: 'default' },
+    },
+    {
       path: '/checkout',
       name: 'checkout',
       component: () => import('../views/cart/cartCheckout.vue'),
