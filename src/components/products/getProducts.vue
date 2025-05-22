@@ -140,7 +140,7 @@
     >
       <!-- Product Card -->
       <div v-for="product in regularProducts" :key="product.id" class="group relative">
-        <router-link :to="`/product/${product.id}`">
+        <router-link :to="`/product/${product.id}`" @click="handleProductClick">
           <!-- Product Image Container with Relative Positioning -->
           <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
             <!-- Product Image -->
@@ -379,6 +379,12 @@ const getImageUrl = (product) => {
   }
   // Fix double slashes in URL
   return product.product_image[0].url.replace(/\/+/g, '/')
+}
+
+// Add handleProductClick function
+const handleProductClick = async () => {
+  window.scrollTo({ top: 0 })
+  await new Promise((resolve) => setTimeout(resolve, 100))
 }
 
 // Lifecycle Hooks
