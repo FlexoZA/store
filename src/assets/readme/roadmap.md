@@ -110,6 +110,7 @@ Each file in the project has an associated readme file in `/src/assets/readme/` 
 | [products-store.md](./products-store.md)                         | Product store documentation                | src/stores/supabase/productsStore.js         |
 | [user-login.md](./user-login.md)                                 | Authentication documentation               | Authentication components and stores         |
 | [get-products-vue-component.md](./get-products-vue-component.md) | Product component documentation            | Product-related components                   |
+| [get-product-vue-component.md](./get-product-vue-component.md)   | Single product view documentation          | src/components/products/getProduct.vue       |
 | [main-navigation.md](./main-navigation.md)                       | Main navigation bar documentation          | src/components/navigation/MainNavigation.vue |
 | [cache-utils.md](./cache-utils.md)                               | Cache utility documentation                | src/utils/cacheUtils.js                      |
 | [price-utils.md](./price-utils.md)                               | Price formatting utility documentation     | src/utils/priceUtils.js                      |
@@ -150,6 +151,7 @@ This section tracks where key components are used throughout the application:
 | AdminUsers             | src/components/admin/users/AdminUsers.vue                | User management interface for administrators.                                                                                                                                                                                                                                                                                              |
 | AdminSettings          | src/components/admin/settings/AdminSettings.vue          | Store settings management interface for administrators.                                                                                                                                                                                                                                                                                    |
 | UpdateProduct          | src/components/admin/products/UpdateProduct.vue          | Modal component used in AdminProducts for updating existing products. Provides form interface for editing product details including name, SKU, description, price, quantity, category, featured status and enabled status.                                                                                                                 |
+| GetProduct             | src/components/products/getProduct.vue                   | Single product view component that displays detailed product information. Features product image, name, price, description, specifications, and add to cart functionality. Includes breadcrumb navigation and responsive layout. Used in the product detail route (/product/:id).                                                          |
 
 ## 9. Utilities Usage
 
