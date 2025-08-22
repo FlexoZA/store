@@ -21,6 +21,7 @@
               <div>
                 <div class="flex justify-between text-base font-medium text-gray-900">
                   <h3>{{ item.product_name || item.name }}</h3>
+                  <!-- TODO:: Get price and symbol from DB -->
                   <p class="ml-4">R {{ formatPrice(item.price * item.quantity) }}</p>
                 </div>
               </div>

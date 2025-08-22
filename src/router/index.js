@@ -4,6 +4,14 @@ import { useAuthStore } from '../stores/authentication/authenticationStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(_to, _from, savedPosition) {
+    // If there's a saved position, use it; otherwise scroll to top
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  },
   routes: [
     {
       path: '/',
